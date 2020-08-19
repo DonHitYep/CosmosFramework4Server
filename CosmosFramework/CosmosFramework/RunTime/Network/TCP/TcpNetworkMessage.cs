@@ -8,6 +8,8 @@ namespace Cosmos
 {
     public class TcpNetworkMessage : INetworkMessage
     {
+        public int SessionID { get; set; }
+
         public void DecodeMessage(byte[] buffer)
         {
         }

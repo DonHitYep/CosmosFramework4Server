@@ -28,12 +28,18 @@ namespace Cosmos
                 }
                 return null;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-
-                throw;
+                return null;
             }
         }
 
+        protected override void SendMessage()
+        {
+        }
+
+        protected override void ReceiveMessage()
+        {
+        }
     }
 }

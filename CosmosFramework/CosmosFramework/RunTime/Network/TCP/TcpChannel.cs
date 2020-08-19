@@ -20,5 +20,13 @@ namespace Cosmos
         {
             throw new NotImplementedException();
         }
+        protected override void SendMessage()
+        {
+            throw new NotImplementedException();
+        }
+        protected override void ReceiveMessage()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

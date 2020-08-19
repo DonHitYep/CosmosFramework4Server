@@ -5,8 +5,9 @@ namespace Cosmos
     /// <summary>
     /// 网络消息接口
     /// </summary>
-    public interface INetworkMessage 
+    public interface INetworkMessage
     {
+        int SessionID { get; }
         byte[] EncodeMessage();
         void DecodeMessage(byte[] buffer);
     }

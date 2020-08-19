@@ -6,12 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 namespace Cosmos
 {
-    public class UdpNetworkMessage : INetworkMessage
+    public class UdpNetworkMessage : INetworkMessage,IReference
     {
         /// <summary>
-        /// 消息大小
+        /// 消息包体大小；
+        /// 取值范围0~65535；
+        /// 约64K一个包
         /// </summary>
-        public int MessageSize { get; private set; }
+        public ushort MessageSize { get; private set; }
         /// <summary>
         /// 会话ID
         /// </summary>
@@ -50,7 +52,7 @@ namespace Cosmos
         public bool IsFull { get; private set; }
         public UdpNetworkMessage(int sessionID, int sessionNum, int moduleID, int messageType, int messageID, byte[] message)
         {
-            MessageSize = message.Length;
+            MessageSize = (ushort)message.Length;
             SessionID = sessionID;
             SessionNum = sessionNum;
             ModuleID = moduleID;
@@ -58,17 +60,22 @@ namespace Cosmos
             MessageID = messageID;
             Message = message;
         }
+        public UdpNetworkMessage() { }
         public UdpNetworkMessage(byte[] buffer)
         {
             Buffer = buffer;
             DecodeMessage(Buffer);
         }
+        /// <summary>
+        /// 解析UDP数据报文
+        /// </summary>
+        /// <param name="buffer"></param>
         public void DecodeMessage(byte[] buffer)
         {
-            if (buffer.Length >= 4)
+            if (buffer.Length >= 2)
             {
-                MessageSize = BitConverter.ToInt32(buffer, 0);
-                if (buffer.Length == MessageSize + 32)
+                MessageSize = BitConverter.ToUInt16(buffer, 0);
+                if (buffer.Length == MessageSize + 30)
                 {
                     IsFull = true;
                 }
@@ -77,26 +84,26 @@ namespace Cosmos
             {
                 IsFull = false;
             }
-            SessionID = BitConverter.ToInt32(buffer, 4);
-            SessionNum = BitConverter.ToInt32(buffer, 8);
-            ModuleID = BitConverter.ToInt32(buffer, 12);
-            TimeStamp = BitConverter.ToInt64(buffer, 16);
-            MessageType = BitConverter.ToInt32(buffer, 32);
-            MessageID = BitConverter.ToInt32(buffer, 28);
+            SessionID = BitConverter.ToInt32(buffer, 2);
+            SessionNum = BitConverter.ToInt32(buffer, 6);
+            ModuleID = BitConverter.ToInt32(buffer, 10);
+            TimeStamp = BitConverter.ToInt64(buffer, 14);
+            MessageType = BitConverter.ToInt32(buffer, 22);
+            MessageID = BitConverter.ToInt32(buffer, 26);
             //MessageType = 0 表示为ACK报文
             if (MessageType != 0)
             {
                 Message = new byte[MessageSize];
-                Array.Copy(buffer, 32, Message, 0, MessageSize);
+                Array.Copy(buffer, 30, Message, 0, MessageSize);
             }
         }
         /// <summary>
-        /// 编码消息
+        /// 编码UDP报文消息
         /// </summary>
         /// <returns>编码后的消息字节流</returns>
         public byte[] EncodeMessage()
         {
-            byte[] data = new byte[32 + MessageSize];
+            byte[] data = new byte[30 + MessageSize];
             if (MessageType==0)
                 MessageSize = 0;
             byte[] msgSize = BitConverter.GetBytes(MessageSize);
@@ -106,18 +113,30 @@ namespace Cosmos
             byte[] timeStamp = BitConverter.GetBytes(TimeStamp);
             byte[] msgType = BitConverter.GetBytes(MessageType);
             byte[] msgID = BitConverter.GetBytes(MessageID);
-            Array.Copy(msgSize, 0, data, 0, 4);
-            Array.Copy(sessionID, 0, data, 4, 4);
-            Array.Copy(sessionNum, 0, data, 8, 4);
-            Array.Copy(moduleID, 0, data, 12, 4);
-            Array.Copy(timeStamp, 0, data, 16, 8);
-            Array.Copy(msgType, 0, data, 24, 4);
-            Array.Copy(msgID, 0, data, 28, 4);
+            Array.Copy(msgSize, 0, data, 0, 2);
+            Array.Copy(sessionID, 0, data, 2, 4);
+            Array.Copy(sessionNum, 0, data, 6, 4);
+            Array.Copy(moduleID, 0, data, 10, 4);
+            Array.Copy(timeStamp, 0, data, 14, 8);
+            Array.Copy(msgType, 0, data, 22, 4);
+            Array.Copy(msgID, 0, data, 26, 4);
             //如果不是ACK报文，则追加数据
             if (MessageType!=0)
-                Array.Copy(Message, 0, data, 32, Message.Length);
+                Array.Copy(Message, 0, data, 30, Message.Length);
             Buffer = data;
             return data;
+        }
+        public void Clear()
+        {
+            MessageSize = 0;
+            SessionID = 0;
+            SessionNum = 0;
+            ModuleID = 0;
+            MessageType = 0;
+            MessageID = 0;
+            Message = null;
+            IsFull = false;
+            TimeStamp = 0;
         }
     }
 }

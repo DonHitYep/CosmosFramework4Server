@@ -8,17 +8,19 @@ using System.Net.Sockets;
 using System.Net;
 using System.Threading;
 using Cosmos;
+using Cosmos.Reference;
+
 namespace Cosmos.Network
 {
     /// <summary>
     /// UDP socket服务；
     /// 这里管理其他接入的远程对象；
     /// </summary>
-    public class UdpService
+    public class UdpService : IRefreshable
     {
         UdpClient udpSocket;
         /// <summary>
-        /// 远程对象
+        /// 远程对象；
         /// </summary>
         IPEndPoint remoteEndPoint;
         /// <summary>
@@ -31,14 +33,15 @@ namespace Cosmos.Network
         int remotePort = 20771;
         Action<INetworkMessage> dispatchNetMsgHandler;
         ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
-        CancellationTokenSource cancelToken = new CancellationTokenSource();
-        ConcurrentDictionary<int, UClient> clients = new ConcurrentDictionary<int, UClient>();
+        ConcurrentDictionary<int, UdpClientPeer> clients = new ConcurrentDictionary<int, UdpClientPeer>();
+        int sessionID = 0;
 
         public UdpService(Action<INetworkMessage> dispatchNetMsgHandler)
         {
             this.dispatchNetMsgHandler = dispatchNetMsgHandler;
             remoteEndPoint = new IPEndPoint(IPAddress.Parse(remoteIP), remotePort);
-            udpSocket = new UdpClient(remotePort);
+            //构造传入0表示接收任意端口收发的数据
+            udpSocket = new UdpClient(0);
         }
         /// <summary>
         /// 异步接收网络消息接口
@@ -59,13 +62,17 @@ namespace Cosmos.Network
                 }
             }
         }
-        public async void SendMessage(byte[] data, IPEndPoint iPEndPoint)
+        /// <summary>
+        /// 发送报文信息
+        /// </summary>
+        /// <param name="data">报文数据</param>
+        public async void SendMessage(byte[] data)
         {
             if (udpSocket != null)
             {
                 try
                 {
-                    int length = await udpSocket.SendAsync(data, data.Length, iPEndPoint);
+                    int length = await udpSocket.SendAsync(data, data.Length, remoteEndPoint);
                 }
                 catch (Exception e)
                 {
@@ -75,7 +82,6 @@ namespace Cosmos.Network
         }
         public void Close()
         {
-            cancelToken.Cancel();
             foreach (var client in clients.Values)
             {
                 client.OnTermination();
@@ -88,37 +94,22 @@ namespace Cosmos.Network
             }
             dispatchNetMsgHandler = null;
         }
-        int sessionID = 0;
-        async Task Handle()
+        /// <summary>
+        /// 轮询更新;
+        /// 客户端建议在FixUpdate中使用；
+        /// 
+        /// </summary>
+        public void OnRefresh()
         {
-            while (!cancelToken.IsCancellationRequested)
+            if (awaitHandle.Count > 0)
             {
-                if (awaitHandle.Count>0)
+                UdpReceiveResult data;
+                if (awaitHandle.TryDequeue(out data))
                 {
-                    UdpReceiveResult data;
-                    if(awaitHandle.TryDequeue(out data))
-                    {
-                        UdpNetworkMessage netMsg = new UdpNetworkMessage(data.Buffer);
-                        if (netMsg.IsFull)
-                        {
-                            if (netMsg.SessionID == 0)
-                            {
-                                sessionID += 1;
-                                netMsg.SessionID = sessionID;
-                                CreateUClient(netMsg);
-                            }
-                            UClient targetClient;
-                            if(clients.TryGetValue(netMsg.SessionID,out targetClient))
-                            {
-                                targetClient.Handler(netMsg);
-                            }
-                        }
-                    }
+                    UdpNetworkMessage netMsg = ReferencePoolManager.Instance.Spawn<UdpNetworkMessage>();
+                    netMsg.DecodeMessage(data.Buffer);
                 }
             }
-        }
-        void CreateUClient(INetworkMessage netMsg)
-        {
         }
     }
 }

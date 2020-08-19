@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 namespace Cosmos.Reference
 {
-    internal sealed class ReferencePoolManager 
+    internal sealed class ReferencePoolManager :ConcurrentSingleton<ReferencePoolManager>
     {
         #region Properties
         /// <summary>

@@ -4,15 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cosmos
+namespace Cosmos.Network
 {
-    public class UClient:IBehaviour
+    public class UdpClientPeer:IRomotePeer
     {
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        public int SessionID { get; set; }
         public void Handler(INetworkMessage netMsg)
         {
-
         }
-
         public void OnInitialization()
         {
         }
