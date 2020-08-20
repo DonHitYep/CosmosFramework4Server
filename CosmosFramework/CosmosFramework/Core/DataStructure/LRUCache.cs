@@ -7,7 +7,7 @@ namespace Cosmos
     /// <summary>
     /// LRU缓存Least Recently Used
     /// </summary>
-    public class LRUCache <Key,Value>:IEnumerable<Value>
+    public class LRUCache<Key, Value> : IEnumerable<Value>
     {
         // TODO LRUCache实现IDictionary接口
 
@@ -28,7 +28,7 @@ namespace Cosmos
             }
             catch (Exception)
             {
-                throw new CFrameworkException("Overflow handler not exist !" + handler.ToString());
+                throw new ArgumentNullException("Overflow handler not exist !" + handler.ToString());
             }
         }
         const uint DEFAULT_CAPACITY = 255;
@@ -47,9 +47,9 @@ namespace Cosmos
                     locker.EnterReadLock();
                     try
                     {
-                        value= dictionary[key];
+                        value = dictionary[key];
                     }
-                    finally {locker.ExitReadLock();}
+                    finally { locker.ExitReadLock(); }
                 }
                 return value;
             }
@@ -249,9 +249,9 @@ namespace Cosmos
         /// 重置数组长度；当前重置长度，除非数值比原先大，否则使用原有容量
         /// </summary>
         /// <param name="capacity">新的数组长度</param>
-        public void ResetCapacity(uint capacity )
+        public void ResetCapacity(uint capacity)
         {
-            this.capacity = capacity >this.capacity  ? capacity : this.capacity;
+            this.capacity = capacity > this.capacity ? capacity : this.capacity;
         }
     }
 }

@@ -33,12 +33,5 @@ namespace Cosmos.Network
                 return clientEndPoint;
             }
         }
-        /// <summary>
-        /// 建立远程连接
-        /// </summary>
-        internal void Connect()
-        {
-
-        }
     }
 }

@@ -34,7 +34,7 @@ namespace Cosmos.Network
         Action<INetworkMessage> dispatchNetMsgHandler;
         ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
         ConcurrentDictionary<int, UdpClientPeer> clients = new ConcurrentDictionary<int, UdpClientPeer>();
-        int sessionID = 0;
+        int conv = 0;
 
         public UdpService(Action<INetworkMessage> dispatchNetMsgHandler)
         {
@@ -82,11 +82,6 @@ namespace Cosmos.Network
         }
         public void Close()
         {
-            foreach (var client in clients.Values)
-            {
-                client.OnTermination();
-            }
-            clients.Clear();
             if (udpSocket != null)
             {
                 udpSocket.Close();
@@ -111,5 +106,8 @@ namespace Cosmos.Network
                 }
             }
         }
+        //IRomotePeer CreatePeer(UdpNetworkMessage udpNetMsg)
+        //{
+        //}
     }
 }

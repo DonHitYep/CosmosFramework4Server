@@ -6,59 +6,107 @@ using System.Text;
 using System.Threading.Tasks;
 namespace Cosmos
 {
-    public class UdpNetworkMessage : INetworkMessage,IReference
+    public class UdpNetworkMessage : INetworkMessage, IReference
     {
         /// <summary>
         /// 消息包体大小；
         /// 取值范围0~65535；
         /// 约64K一个包
         /// </summary>
-        public ushort MessageSize { get; private set; }
+        public ushort Length { get; private set; }
         /// <summary>
-        /// 会话ID
+        /// 会话ID;
+        /// 为一个表示会话编号的整数，
+        /// 和TCP的 conv一样，通信双方需保证 conv相同，
+        /// 相互的数据包才能够被接受。conv唯一标识一个会话，但通信双方可以同时存在多个会话。
         /// </summary>
-        public int SessionID { get; set; }
+        public uint Conv { get; set; }
         /// <summary>
-        /// 会话序号
+        /// 第一个未确认的包
         /// </summary>
-        public int SessionNum { get; set; }
+        public uint Snd_una { get; set; }
+        ///// <summary>
+        /////下一个需要发送的msg序号
+        ///// </summary>
+        //public uint Snd_nxt { get; set; }
         /// <summary>
-        /// 模块ID
+        /// 待接收消息序号；
+        /// 这里填充ACK序号；
         /// </summary>
-        public int ModuleID { get; set; }
+        public uint Rcv_nxt { get; set; }
         /// <summary>
-        /// 时间戳
+        ///当前 message序号，按1累次递增。
         /// </summary>
-        public long TimeStamp { get; set; }
+        public uint SN { get; set; }
         /// <summary>
-        /// 协议类型
+        /// 时间戳TimeStamp
         /// </summary>
-        public int MessageType { get; set; }
+        public long TS { get; set; }
         /// <summary>
-        /// 协议ID
+        /// Kcp协议类型:
+        /// 用来区分分片的作用。
+        /// IKCP_CMD_PUSH：数据分片；
+        /// IKCP_CMD_ACK：ack分片； 
+        /// IKCP_CMD_WASK：请求告知窗口大小；
+        /// IKCP_CMD_WINS：告知窗口大小。
         /// </summary>
-        public int MessageID { get; set; }
+        public ushort Cmd { get; set; }
         /// <summary>
         /// 业务报文
         /// </summary>
-        public byte[] Message { get; set; }
+        public byte[] ServiceMsg { get; set; }
+
         /// <summary>
-        /// 收发的数组
+        /// 消息重传次数；
+        /// 标准KCP库中（C版）重传上线是20；
+        /// </summary>
+        public ushort RecurCount { get; set; }
+        /// <summary>
+        /// 存储消息字节流的内存
         /// </summary>
         public byte[] Buffer { get; set; }
         /// <summary>
         /// 是否是完整报文
         /// </summary>
         public bool IsFull { get; private set; }
-        public UdpNetworkMessage(int sessionID, int sessionNum, int moduleID, int messageType, int messageID, byte[] message)
+        /// <summary>
+        /// 消息报文构造
+        /// </summary>
+        /// <param name="conv">会话ID</param>
+        /// <param name="sn">msg序号</param>
+        /// <param name="cmd">协议ID</param>
+        /// <param name="message">消息内容</param>
+        public UdpNetworkMessage(uint conv, uint sn, ushort cmd, byte[] message)
         {
-            MessageSize = (ushort)message.Length;
-            SessionID = sessionID;
-            SessionNum = sessionNum;
-            ModuleID = moduleID;
-            MessageType = messageType;
-            MessageID = messageID;
-            Message = message;
+            Length = (ushort)message.Length;
+            Conv = conv;
+            SN = sn;
+            Cmd = cmd;
+            ServiceMsg = message;
+            Rcv_nxt = sn;
+        }
+        public UdpNetworkMessage(UdpNetworkMessage udpNetMsg)
+        {
+            Length = 0;
+            Conv = udpNetMsg.Conv;
+            SN = udpNetMsg.SN;
+            Rcv_nxt = SN;
+            Cmd = KcpProtocol.ACK; 
+        }
+        /// <summary>
+        /// ACK报文构造
+        /// </summary>
+        /// <param name="conv">会话ID</param>
+        /// <param name="snd_una">未确认的报文</param>
+        /// <param name="sn">msgID</param>
+        /// <param name="cmd">协议</param>
+        public UdpNetworkMessage(uint conv, uint snd_una,uint sn, ushort cmd)
+        {
+            Conv = conv;
+            Snd_una = snd_una;
+            SN = sn;
+            Rcv_nxt = SN;
+            Cmd = cmd;
         }
         public UdpNetworkMessage() { }
         public UdpNetworkMessage(byte[] buffer)
@@ -74,8 +122,8 @@ namespace Cosmos
         {
             if (buffer.Length >= 2)
             {
-                MessageSize = BitConverter.ToUInt16(buffer, 0);
-                if (buffer.Length == MessageSize + 30)
+                Length = BitConverter.ToUInt16(buffer, 0);
+                if (buffer.Length == Length + 26)
                 {
                     IsFull = true;
                 }
@@ -84,17 +132,16 @@ namespace Cosmos
             {
                 IsFull = false;
             }
-            SessionID = BitConverter.ToInt32(buffer, 2);
-            SessionNum = BitConverter.ToInt32(buffer, 6);
-            ModuleID = BitConverter.ToInt32(buffer, 10);
-            TimeStamp = BitConverter.ToInt64(buffer, 14);
-            MessageType = BitConverter.ToInt32(buffer, 22);
-            MessageID = BitConverter.ToInt32(buffer, 26);
-            //MessageType = 0 表示为ACK报文
-            if (MessageType != 0)
+            Conv = BitConverter.ToUInt32(buffer, 2);
+            Snd_una = BitConverter.ToUInt32(buffer, 6);
+            Rcv_nxt= BitConverter.ToUInt32(buffer, 10);
+            SN= BitConverter.ToUInt32(buffer, 14);
+            TS= BitConverter.ToInt64(buffer, 18);
+            Cmd = BitConverter.ToUInt16(buffer, 26);
+            if (Cmd == KcpProtocol.MSG)
             {
-                Message = new byte[MessageSize];
-                Array.Copy(buffer, 30, Message, 0, MessageSize);
+                ServiceMsg = new byte[Length];
+                Array.Copy(buffer, 26, ServiceMsg, 0, Length);
             }
         }
         /// <summary>
@@ -103,40 +150,40 @@ namespace Cosmos
         /// <returns>编码后的消息字节流</returns>
         public byte[] EncodeMessage()
         {
-            byte[] data = new byte[30 + MessageSize];
-            if (MessageType==0)
-                MessageSize = 0;
-            byte[] msgSize = BitConverter.GetBytes(MessageSize);
-            byte[] sessionID = BitConverter.GetBytes(SessionID);
-            byte[] sessionNum = BitConverter.GetBytes(SessionNum);
-            byte[] moduleID = BitConverter.GetBytes(ModuleID);
-            byte[] timeStamp = BitConverter.GetBytes(TimeStamp);
-            byte[] msgType = BitConverter.GetBytes(MessageType);
-            byte[] msgID = BitConverter.GetBytes(MessageID);
-            Array.Copy(msgSize, 0, data, 0, 2);
-            Array.Copy(sessionID, 0, data, 2, 4);
-            Array.Copy(sessionNum, 0, data, 6, 4);
-            Array.Copy(moduleID, 0, data, 10, 4);
-            Array.Copy(timeStamp, 0, data, 14, 8);
-            Array.Copy(msgType, 0, data, 22, 4);
-            Array.Copy(msgID, 0, data, 26, 4);
+            byte[] data = new byte[26 + Length];
+            if (Cmd == KcpProtocol.ACK)
+                Length = 0;
+            byte[] len = BitConverter.GetBytes(Length);
+            byte[] conv = BitConverter.GetBytes(Conv);
+            byte[] snd_una= BitConverter.GetBytes(Snd_una);
+            byte[] rcv_nxt= BitConverter.GetBytes(Rcv_nxt);
+            byte[] sn = BitConverter.GetBytes(SN);
+            byte[] ts = BitConverter.GetBytes(TS);
+            byte[] cmd = BitConverter.GetBytes(Cmd);
+            Array.Copy(len, 0, data, 0, 2);
+            Array.Copy(conv, 0, data, 2, 4);
+            Array.Copy(snd_una, 0, data, 6, 4);
+            Array.Copy(rcv_nxt, 0, data, 10, 4);
+            Array.Copy(sn, 0, data, 14, 4);
+            Array.Copy(ts, 0, data, 18, 8);
+            Array.Copy(cmd, 0, data, 26, 2);
             //如果不是ACK报文，则追加数据
-            if (MessageType!=0)
-                Array.Copy(Message, 0, data, 30, Message.Length);
+            if (Cmd == KcpProtocol.MSG)
+                Array.Copy(ServiceMsg, 0, data, 28, ServiceMsg.Length);
             Buffer = data;
             return data;
         }
         public void Clear()
         {
-            MessageSize = 0;
-            SessionID = 0;
-            SessionNum = 0;
-            ModuleID = 0;
-            MessageType = 0;
-            MessageID = 0;
-            Message = null;
+            Length = 0;
+            Conv = 0;
+            Snd_una = 0;
+            Rcv_nxt = 0;
+            SN = 0;
+            TS = 0;
+            Cmd = KcpProtocol.NIL;
+            ServiceMsg = null;
             IsFull = false;
-            TimeStamp = 0;
         }
     }
 }

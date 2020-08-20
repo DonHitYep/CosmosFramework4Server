@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Text;
-namespace Cosmos { 
+namespace Cosmos
+{
     public sealed partial class Utility
     {
         public static class Text
         {
             [ThreadStatic]//每个静态类型字段对于每一个线程都是唯一的
             static StringBuilder stringBuilderCache;
-           public static StringBuilder StringBuilderCache
+            public static StringBuilder StringBuilderCache
             {
                 get
                 {
@@ -23,15 +24,15 @@ namespace Cosmos {
             /// <param name="format">字符串格式</param>
             /// <param name="args">字符串参数</param>
             /// <returns>格式化后的字符串</returns>
-            public static string Format(string format,params object[] args)
+            public static string Format(string format, params object[] args)
             {
                 if (format == null)
                 {
-                    throw new CFrameworkException("Format is invalid.");
+                    throw new ArgumentNullException("Format is invalid.");
                 }
                 if (args == null)
                 {
-                    throw new CFrameworkException("Args is invalid.");
+                    throw new ArgumentNullException("Args is invalid.");
                 }
                 StringBuilderCache.Length = 0;
                 StringBuilderCache.AppendFormat(format, args);
@@ -43,15 +44,15 @@ namespace Cosmos {
             /// <param name="format">需要格式化的字符串</param>
             /// <param name="arg">额外的参数</param>
             /// <returns></returns>
-            public static string Format(string format,object arg)
+            public static string Format(string format, object arg)
             {
                 if (string.IsNullOrEmpty(format))
                 {
-                    throw new CFrameworkException("Format is invalid.");
+                    throw new ArgumentNullException("Format is invalid.");
                 }
-                if (arg==null)
+                if (arg == null)
                 {
-                    throw new CFrameworkException("Arg is invalid.");
+                    throw new ArgumentNullException("Arg is invalid.");
                 }
                 StringBuilderCache.Length = 0;
                 StringBuilderCache.AppendFormat(format, arg);
@@ -107,9 +108,7 @@ namespace Cosmos {
             {
                 if (string.IsNullOrEmpty(fullString) || string.IsNullOrEmpty(separator.ToString()))
                 {
-                    //DebugError("charCount \n string invaild!");
-                    throw new CFrameworkException("charCount \n string invaild!");
-                    //return 0;
+                    throw new ArgumentNullException("charCount \n string invaild!");
                 }
                 int count = 0;
                 for (int i = 0; i < fullString.Length; i++)

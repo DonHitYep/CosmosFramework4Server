@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 namespace Cosmos
 {
-    public  sealed partial class Utility
+    public sealed partial class Utility
     {
         public static class Assembly
         {
@@ -52,7 +52,7 @@ namespace Cosmos
                 }
                 else
                 {
-                    throw new CFrameworkException("Type : Assembly" + type.AssemblyQualifiedName + "Not exist!");
+                    throw new ArgumentNullException("Type : Assembly" + type.AssemblyQualifiedName + "Not exist!");
                 }
             }
             /// <summary>

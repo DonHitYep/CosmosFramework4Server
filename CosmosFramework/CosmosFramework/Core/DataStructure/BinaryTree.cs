@@ -144,7 +144,7 @@ namespace Cosmos
         public T MaxData()
         {
             if (IsEmpty)
-                throw new CFrameworkException("Empty tree!");
+                throw new ArgumentNullException("Empty tree!");
             return MaxNode(root).Data;
         }
         Node MaxNode(Node node)
@@ -156,7 +156,7 @@ namespace Cosmos
         public T MinData()
         {
             if (IsEmpty)
-                throw new CFrameworkException("Empty tree!");
+                throw new ArgumentNullException("Empty tree!");
             return MinNode(root).Data;
         }
         Node MinNode(Node node)
@@ -185,14 +185,15 @@ namespace Cosmos
         {
             root = RemoveNode(root, data);
         }
-        Node RemoveNode(Node node,T data)
+        Node RemoveNode(Node node, T data)
         {
             if (node == null) return null;
             if (data.CompareTo(node.Data) < 0)
             {
                 node.Left = RemoveNode(node.Left, data);
                 return node;
-            }else if (data.CompareTo(node.Data) > 0)
+            }
+            else if (data.CompareTo(node.Data) > 0)
             {
                 node.Right = RemoveNode(node.Right, data);
                 return node;

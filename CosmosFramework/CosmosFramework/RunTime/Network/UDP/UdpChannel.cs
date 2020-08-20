@@ -13,7 +13,6 @@ namespace Cosmos
         public override ProtocolType Protocol { get { return ProtocolType.Udp; } }
         public override SocketType SocketType { get { return SocketType.Dgram; } }
         public override bool IsNeedConnect { get { return false; } }
-        EndPoint serverEndPoint;
         public override byte[] EncodingMessage(INetworkMessage message)
         {
             UdpNetworkMessage udpNetMsg = message as UdpNetworkMessage;
@@ -23,9 +22,6 @@ namespace Cosmos
         {
             try
             {
-                if (serverEndPoint == null)
-                {
-                }
                 return null;
             }
             catch (Exception)
