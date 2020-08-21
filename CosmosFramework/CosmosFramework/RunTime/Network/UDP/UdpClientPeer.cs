@@ -9,11 +9,10 @@ using System.Net.Sockets;
 
 namespace Cosmos.Network
 {
-    public class UdpClientPeer : IRemotePeer
+    public class UdpClientPeer : IRemotePeer,IRefreshable
     {
         public uint Conv { get;private set; }
         public IPEndPoint PeerEndPoint { get; private set; }
-        public UdpClient ServerPeer { get; set; }
         /// <summary>
         /// 处理的message序号，按1累次递增。
         /// </summary>
@@ -70,8 +69,11 @@ namespace Cosmos.Network
                     break;
                 case KcpProtocol.MSG:
                     {
+                        //生成一个ACK报文，并返回发送
                         UdpNetworkMessage ackMsg = new UdpNetworkMessage(netMsg);
+                        //这里需要发送ACK报文
 
+                        //发送后进行原始报文数据的处理
                         HandleNetMessage(netMsg);
                     }
                     break;
@@ -87,15 +89,23 @@ namespace Cosmos.Network
             {
                 if (msgDict.TryAdd(netMsg.SN, netMsg))
                 {
-                    //收到错序报文
+                    //收到错序报文，存储起来
                 }
                 return;
             }
             HandleSN = netMsg.SN;
+            //NetworkEventCore.Instance.Dispatch(netMsg.m)
+            UdpNetworkMessage udpNextMsg;
+            if(msgDict.TryRemove(HandleSN+1,out udpNextMsg))
+            {
+                HandleNetMessage(udpNextMsg);
+            }
         }
-      async void CheckOutTime()
+        /// <summary>
+        /// 轮询更新，创建Peer对象时候将此方法加入监听；
+        /// </summary>
+        public void OnRefresh()
         {
-            await Task.Delay(interval);
             if (IsAbort)
                 return;
             foreach (var msg in msgDict.Values)
@@ -105,29 +115,29 @@ namespace Cosmos.Network
                     IsAbort = true;
                     return;
                 }
-                if (Utility.Time.MillisecondTimeStamp() - msg.TS>= (msg.RecurCount + 1) * interval)
+                if (Utility.Time.MillisecondTimeStamp() - msg.TS >= (msg.RecurCount + 1) * interval)
                 {
                     //重发次数+1
                     msg.RecurCount += 1;
                     //超时重发
-                    NetworkEventCore.Instance.Dispatch(NetworkCode.SEND_MESSAGE, msg);
+
                 }
             }
-            CheckOutTime();
         }
         /// <summary>
         /// 发送网络消息包到远程
         /// </summary>
         /// <param name="netMsg">消息包</param>
-      public void SendMsg(UdpNetworkMessage netMsg)
+      public void SendMsg(UdpService service,UdpNetworkMessage netMsg)
         {
             netMsg.TS = Utility.Time.MillisecondTimeStamp ();
             SendSN += 1;
             netMsg.SN = SendSN;
             netMsg.EncodeMessage();
-            NetworkEventCore.Instance.Dispatch(NetworkCode.SEND_MESSAGE, netMsg);
+            service.SendMessage(netMsg.Buffer, PeerEndPoint);
             if (Conv != 0)
             {
+                //会话ID不未0，则缓存入ACK容器中，等接收成功后进行移除
                 ackMsgDict.TryAdd(netMsg.SN, netMsg);
             }
         }
@@ -155,5 +165,6 @@ namespace Cosmos.Network
                 HandleNetMsg(nxtNetMsg);
             }
         }
+
     }
 }

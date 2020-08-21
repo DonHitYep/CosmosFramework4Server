@@ -11,8 +11,13 @@ namespace Cosmos
 {
     public class UdpServerService : UdpService
     {
+        /// <summary>
+        /// 销毁一个peer事件处理者
+        /// </summary>
+        Action<uint> peerAbortHandler;
         ConcurrentDictionary<uint, UdpClientPeer> clientDict = new ConcurrentDictionary<uint, UdpClientPeer>();
         HashSet<uint> ackSNSet = new HashSet<uint>();
+        Action refreshHandler;
          bool CreateClientPeer(UdpNetworkMessage udpNetMsg,out UdpClientPeer peer)
         {
             peer =default;
@@ -21,6 +26,7 @@ namespace Cosmos
             {
                 peer = new UdpClientPeer(udpNetMsg.Conv);
                 result= clientDict.TryAdd(udpNetMsg.Conv, peer);
+                refreshHandler+= peer.OnRefresh;
             }
             return result;
         }
@@ -28,6 +34,7 @@ namespace Cosmos
         {
             base.OnRefresh();
             OnReceive();
+            refreshHandler?.Invoke();
             if (awaitHandle.Count > 0)
             {
                 UdpReceiveResult data;
@@ -47,7 +54,18 @@ namespace Cosmos
                     UdpClientPeer tmpPeer;
                     if(clientDict.TryGetValue(netMsg.Conv,out tmpPeer))
                     {
-                        tmpPeer.MsgHandler(netMsg);
+                        //如果peer失效，则移除
+                        if (tmpPeer.IsAbort)
+                        {
+                            refreshHandler -= tmpPeer.OnRefresh;
+                            UdpClientPeer abortPeer;
+                            clientDict.TryRemove(netMsg.Conv, out abortPeer);
+                            peerAbortHandler?.Invoke(abortPeer.Conv);
+                        }
+                        else
+                        {
+                            tmpPeer.MsgHandler(netMsg);
+                        }
                     }
                 }
             }

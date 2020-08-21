@@ -32,7 +32,7 @@ namespace Cosmos.Network
         /// </summary>
         protected int port = 20771;
         protected ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
-      protected  uint conv = 0;
+        protected uint conv = 0;
         public bool IsPause { get; private set; }
 
         public UdpService()
@@ -63,7 +63,7 @@ namespace Cosmos.Network
         /// 发送报文信息
         /// </summary>
         /// <param name="data">报文数据</param>
-        public virtual async void SendMessage(byte[] data,IPEndPoint endPoint)
+        public virtual async void SendMessage(byte[] data, IPEndPoint endPoint)
         {
             if (udpSocket != null)
             {
@@ -77,7 +77,7 @@ namespace Cosmos.Network
                     else
                     {
                         //若丢包，则重新发送
-                        SendMessage(data,endPoint);
+                        SendMessage(data, endPoint);
                     }
                 }
                 catch (Exception e)
