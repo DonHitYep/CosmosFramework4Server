@@ -15,7 +15,7 @@ namespace Cosmos
         /// <summary>
         /// 会话ID
         /// </summary>
-        int Conv { get; set; }
+        uint Conv { get; }
         //string LocalIP { get; }
         //int LocalPort { get; }
         //IPAddress LocalIPAddress { get; }
@@ -26,7 +26,7 @@ namespace Cosmos
         /// 处理网络消息；
         /// </summary>
         /// <param name="netMsg">网络消息</param>
-        void Handler(INetworkMessage netMsg);
+        void MsgHandler(INetworkMessage netMsg);
         //void AbortConnection();
         //void Disconnect();
         //void Dispose();

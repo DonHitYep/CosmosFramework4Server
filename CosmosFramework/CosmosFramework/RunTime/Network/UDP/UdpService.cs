@@ -16,37 +16,35 @@ namespace Cosmos.Network
     /// UDP socket服务；
     /// 这里管理其他接入的远程对象；
     /// </summary>
-    public class UdpService : IRefreshable
+    public class UdpService : IRefreshable, IControllable
     {
-        UdpClient udpSocket;
+        protected UdpClient udpSocket;
         /// <summary>
-        /// 远程对象；
+        /// IP对象；
         /// </summary>
-        IPEndPoint remoteEndPoint;
+        protected IPEndPoint endPoint;
         /// <summary>
-        /// 远程对象IP
+        /// 对象IP
         /// </summary>
-        string remoteIP = "127.0.0.1";
+        protected string ip { get; set; }
         /// <summary>
-        /// 远程对象端口
+        /// 对象端口
         /// </summary>
-        int remotePort = 20771;
-        Action<INetworkMessage> dispatchNetMsgHandler;
-        ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
-        ConcurrentDictionary<int, UdpClientPeer> clients = new ConcurrentDictionary<int, UdpClientPeer>();
-        int conv = 0;
+        protected int port = 20771;
+        protected ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
+      protected  uint conv = 0;
+        public bool IsPause { get; private set; }
 
-        public UdpService(Action<INetworkMessage> dispatchNetMsgHandler)
+        public UdpService()
         {
-            this.dispatchNetMsgHandler = dispatchNetMsgHandler;
-            remoteEndPoint = new IPEndPoint(IPAddress.Parse(remoteIP), remotePort);
+            endPoint = new IPEndPoint(IPAddress.Parse(ip), port);
             //构造传入0表示接收任意端口收发的数据
             udpSocket = new UdpClient(0);
         }
         /// <summary>
         /// 异步接收网络消息接口
         /// </summary>
-        public async void OnReceive()
+        public virtual async void OnReceive()
         {
             if (udpSocket != null)
             {
@@ -54,7 +52,6 @@ namespace Cosmos.Network
                 {
                     UdpReceiveResult result = await udpSocket.ReceiveAsync();
                     awaitHandle.Enqueue(result);
-                    OnReceive();
                 }
                 catch (Exception e)
                 {
@@ -66,13 +63,22 @@ namespace Cosmos.Network
         /// 发送报文信息
         /// </summary>
         /// <param name="data">报文数据</param>
-        public async void SendMessage(byte[] data)
+        public virtual async void SendMessage(byte[] data,IPEndPoint endPoint)
         {
             if (udpSocket != null)
             {
                 try
                 {
-                    int length = await udpSocket.SendAsync(data, data.Length, remoteEndPoint);
+                    int length = await udpSocket.SendAsync(data, data.Length, endPoint);
+                    if (length == data.Length)
+                    {
+                        //长度相等表示完全发送
+                    }
+                    else
+                    {
+                        //若丢包，则重新发送
+                        SendMessage(data,endPoint);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -80,34 +86,29 @@ namespace Cosmos.Network
                 }
             }
         }
-        public void Close()
+        public virtual void Close()
         {
             if (udpSocket != null)
             {
                 udpSocket.Close();
                 udpSocket = null;
             }
-            dispatchNetMsgHandler = null;
         }
         /// <summary>
         /// 轮询更新;
-        /// 客户端建议在FixUpdate中使用；
-        /// 
         /// </summary>
-        public void OnRefresh()
+        public virtual void OnRefresh()
         {
-            if (awaitHandle.Count > 0)
-            {
-                UdpReceiveResult data;
-                if (awaitHandle.TryDequeue(out data))
-                {
-                    UdpNetworkMessage netMsg = ReferencePoolManager.Instance.Spawn<UdpNetworkMessage>();
-                    netMsg.DecodeMessage(data.Buffer);
-                }
-            }
+
         }
-        //IRomotePeer CreatePeer(UdpNetworkMessage udpNetMsg)
-        //{
-        //}
+
+        public void OnPause()
+        {
+            IsPause = true;
+        }
+        public void OnUnPause()
+        {
+            IsPause = false;
+        }
     }
 }
