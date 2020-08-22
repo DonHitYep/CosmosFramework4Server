@@ -61,6 +61,11 @@ namespace Cosmos
             {
                 return Utility.Text.Format(Convert.ToString(value, 2));
             }
+            public static string ConvertToString(byte[] value)
+            {
+                string str = BitConverter.ToString(value);
+                return str;
+            }
             /// <summary>
             /// 转换成16进制的字符串
             /// </summary>

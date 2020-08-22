@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 namespace Cosmos.Reference
 {
-    public sealed class ReferencePoolManager :ModuleBase<ReferencePoolManager>
+    public sealed class ReferencePoolManager :Module<ReferencePoolManager>
     {
         #region Properties
         /// <summary>

@@ -9,7 +9,7 @@ namespace Cosmos.Network
     /// <summary>
     /// 此模块为客户端网络管理类
     /// </summary>
-    public sealed class NetworkManager : ModuleBase<NetworkManager>,IRefreshable
+    public sealed class NetworkManager : Module<NetworkManager>,IRefreshable
     {
         string serverIP;
         int serverPort;

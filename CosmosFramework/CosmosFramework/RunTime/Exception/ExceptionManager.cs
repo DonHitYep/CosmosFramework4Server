@@ -6,7 +6,7 @@ namespace Cosmos
     /// <summary>
     /// 异常处理模块
     /// </summary>
-    public class ExceptionManager :ModuleBase<ExceptionManager>
+    public class ExceptionManager :Module<ExceptionManager>
     {
         /// <summary>
         /// 是否输出日志

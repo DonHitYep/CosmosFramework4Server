@@ -15,8 +15,6 @@ namespace CosmosFramework4Server
             NetworkManager.Instance.InitNetwork(System.Net.Sockets.ProtocolType.Udp);
             Task.Run(PollingManager.Instance.OnRefresh);
             Task.Run(AsyncCoroutine.Instance.Start);
-            AsyncCoroutine.Instance.WaitTimeAsyncCallback(4000, () => PollingManager.Instance.OnPause());
-            AsyncCoroutine.Instance.WaitTimeAsyncCallback(9000, () => PollingManager.Instance.OnUnPause());
             while (true){}
             Console.ReadLine();
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cosmos
 {
-    public class PollingManager:ModuleBase<PollingManager>,IRefreshable,IControllable
+    public class PollingManager:Module<PollingManager>,IRefreshable,IControllable
     {
         Action pollingHandler;
 

@@ -17,7 +17,6 @@ namespace Cosmos
         /// </summary>
         Action<uint> peerAbortHandler;
         ConcurrentDictionary<uint, UdpClientPeer> clientDict = new ConcurrentDictionary<uint, UdpClientPeer>();
-        HashSet<uint> ackSNSet = new HashSet<uint>();
         /// <summary>
         /// 轮询委托
         /// </summary>

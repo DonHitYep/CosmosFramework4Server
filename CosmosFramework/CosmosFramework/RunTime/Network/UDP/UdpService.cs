@@ -39,7 +39,6 @@ namespace Cosmos.Network
             endPoint = new IPEndPoint(IPAddress.Parse(ip), port);
             //构造传入0表示接收任意端口收发的数据
             udpSocket = new UdpClient(0);
-            OnReceive();
         }
         /// <summary>
         /// 非空虚函数；
@@ -64,7 +63,6 @@ namespace Cosmos.Network
                 {
                     UdpReceiveResult result = await udpSocket.ReceiveAsync();
                     awaitHandle.Enqueue(result);
-                    OnReceive();
                 }
                 catch (Exception e)
                 {
@@ -81,17 +79,11 @@ namespace Cosmos.Network
         /// <param name="endPoint">远程对象</param>
         public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint){}
         /// <summary>
-        /// 空虚函数；
+        /// 非空虚函数；
         /// 轮询更新;
         /// </summary>
-        public  virtual void OnRefresh(){}
-        public void OnPause()
-        {
-            IsPause = true;
-        }
-        public void OnUnPause()
-        {
-            IsPause = false;
-        }
+        public  virtual void OnRefresh(){ OnReceive(); }
+        public void OnPause(){IsPause = true;}
+        public void OnUnPause(){IsPause = false;}
     }
 }

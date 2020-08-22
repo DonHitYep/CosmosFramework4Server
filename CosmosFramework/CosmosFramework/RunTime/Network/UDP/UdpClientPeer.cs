@@ -28,12 +28,9 @@ namespace Cosmos.Network
         /// <summary>
         /// 并发发送消息的字典；
         /// 整理错序报文；
+        /// 临时起到ACK缓存的作用
         /// </summary>
         ConcurrentDictionary<uint, UdpNetworkMessage> msgDict = new ConcurrentDictionary<uint, UdpNetworkMessage>();
-        /// <summary>
-        /// ACK报文缓存，接收成功后从缓存中移除
-        /// </summary>
-        ConcurrentDictionary<uint, UdpNetworkMessage> ackMsgDict = new ConcurrentDictionary<uint, UdpNetworkMessage>();
         const int interval = 100;
         public UdpClientPeer(uint conv)
         {
@@ -54,6 +51,10 @@ namespace Cosmos.Network
                         UdpNetworkMessage tmpMsg;
                         if (!msgDict.TryRemove(netMsg.SN, out tmpMsg))
                             Utility.Debug.LogError($"网络消息ACK接收异常 :{tmpMsg.SN} ");
+                        else
+                        {
+                            Utility.Debug.LogInfo($"网络消息 : ID :{Conv},内容：{Utility.Encode.ConvertToString(tmpMsg.ServiceMsg)} ");
+                        }
                     }
                     break;
                 case KcpProtocol.MSG:
@@ -108,7 +109,7 @@ namespace Cosmos.Network
             if (Conv != 0)
             {
                 //若会话ID不为0，则缓存入ACK容器中，等接收成功后进行移除
-                result= ackMsgDict.TryAdd(netMsg.SN, netMsg);
+                result= msgDict.TryAdd(netMsg.SN, netMsg);
             }
             return  result; ;
         }
