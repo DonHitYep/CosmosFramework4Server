@@ -12,7 +12,7 @@ namespace Cosmos
     /// 开启协程请调用 Start；
     /// 生命周期：Task.Run(Start)->OnPause/OnUnPause->Abort->OnRenewal->Task.Run(Start);
     /// </summary>
-    public class AsyncCoroutine : ConcurrentSingleton<AsyncCoroutine>, IControllable,IRenewable
+    public class AsyncCoroutine : ConcurrentSingleton<AsyncCoroutine>, IControllable, IRenewable
     {
         /// <summary>
         /// 内部的协程结构体
@@ -71,7 +71,7 @@ namespace Cosmos
         public void WaitTimeAsyncCallback(int waitTime, Action callback)
         {
             var dispatchTime = Utility.Time.MillisecondNow() + waitTime;
-            CoroutineStruct corou = new CoroutineStruct(dispatchTime,callback);
+            CoroutineStruct corou = new CoroutineStruct(dispatchTime, callback);
             corouSet.Add(corou);
         }
         public void OnPause()
@@ -89,7 +89,7 @@ namespace Cosmos
         {
             canRun = true;
         }
-        void OnRefresh()
+         void OnRefresh()
         {
             if (corouSet.Count <= 0)
                 return;

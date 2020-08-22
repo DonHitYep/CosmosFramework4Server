@@ -1,14 +1,23 @@
 ﻿using System;
 using Cosmos;
+using Cosmos.Network;
 using System.Threading.Tasks;
+using ProtocolCore;
+
 namespace CosmosFramework4Server
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-            AsyncCoroutineTest();
+            Utility.Debug.SetHelper(new ConsoleDebugHelper());
+            Utility.Debug.LogInfo("Server start Running");
+            NetworkManager.Instance.InitNetwork(System.Net.Sockets.ProtocolType.Udp);
+            Task.Run(PollingManager.Instance.OnRefresh);
+            Task.Run(AsyncCoroutine.Instance.Start);
+            AsyncCoroutine.Instance.WaitTimeAsyncCallback(4000, () => PollingManager.Instance.OnPause());
+            AsyncCoroutine.Instance.WaitTimeAsyncCallback(9000, () => PollingManager.Instance.OnUnPause());
+            while (true){}
             Console.ReadLine();
         }
         /// <summary>

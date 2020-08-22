@@ -6,7 +6,7 @@ namespace Cosmos
     /// <summary>
     /// 异常处理模块
     /// </summary>
-    internal class ExceptionManager 
+    public class ExceptionManager :ModuleBase<ExceptionManager>
     {
         /// <summary>
         /// 是否输出日志
@@ -17,7 +17,7 @@ namespace Cosmos
         /// 抛出异常
         /// </summary>
         /// <param name="e">异常对象</param>
-        internal void ThrowException( Exception e,string logString)
+        public void ThrowException( Exception e,string logString)
         {
 
         }

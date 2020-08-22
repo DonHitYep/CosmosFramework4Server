@@ -22,11 +22,11 @@ namespace Cosmos
         //string RemoteIP { get; }
         //int RemotePort { get; }
         //IPAddress RemoteIPAddress { get; }
-        /// <summary>
-        /// 处理网络消息；
-        /// </summary>
-        /// <param name="netMsg">网络消息</param>
-        void MsgHandler(INetworkMessage netMsg);
+        ///// <summary>
+        ///// 处理网络消息；
+        ///// </summary>
+        ///// <param name="netMsg">网络消息</param>
+        //void MsgHandler(INetworkMessage netMsg);
         //void AbortConnection();
         //void Disconnect();
         //void Dispose();

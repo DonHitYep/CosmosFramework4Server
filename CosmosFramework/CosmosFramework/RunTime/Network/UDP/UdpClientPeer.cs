@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 namespace Cosmos.Network
 {
-    public class UdpClientPeer : IRemotePeer,IRefreshable
+    public class UdpClientPeer : IRemotePeer
     {
         public uint Conv { get;private set; }
         public IPEndPoint PeerEndPoint { get; private set; }
@@ -22,9 +22,9 @@ namespace Cosmos.Network
         /// </summary>
         public uint SendSN { get; set; }
         /// <summary>
-        /// 当前Peer是否失效
+        /// 当前Peer是否处于连接状态
         /// </summary>
-        public bool IsAbort { get; private set; } = false;
+        public bool IsConnect { get; private set; } = false;
         /// <summary>
         /// 并发发送消息的字典；
         /// 整理错序报文；
@@ -34,12 +34,7 @@ namespace Cosmos.Network
         /// ACK报文缓存，接收成功后从缓存中移除
         /// </summary>
         ConcurrentDictionary<uint, UdpNetworkMessage> ackMsgDict = new ConcurrentDictionary<uint, UdpNetworkMessage>();
-
-        UdpClient udpClient;
-
-        Action<UdpNetworkMessage> Handle;
         const int interval = 100;
-
         public UdpClientPeer(uint conv)
         {
             this.Conv = conv;
@@ -48,7 +43,7 @@ namespace Cosmos.Network
         {
             this.PeerEndPoint = endPoint;
         }
-        public void MsgHandler(INetworkMessage msg)
+        public void MsgHandler(UdpServerService service,INetworkMessage msg)
         {
             UdpNetworkMessage netMsg =msg as UdpNetworkMessage;
             switch (netMsg.Cmd)
@@ -57,62 +52,36 @@ namespace Cosmos.Network
                 case KcpProtocol.ACK:
                     {
                         UdpNetworkMessage tmpMsg;
-                        if (msgDict.TryRemove(netMsg.SN, out tmpMsg))
-                        {
-
-                        }
-                        else
-                        {
-
-                        }
+                        if (!msgDict.TryRemove(netMsg.SN, out tmpMsg))
+                            Utility.Debug.LogError($"网络消息ACK接收异常 :{tmpMsg.SN} ");
                     }
                     break;
                 case KcpProtocol.MSG:
                     {
                         //生成一个ACK报文，并返回发送
-                        UdpNetworkMessage ackMsg = new UdpNetworkMessage(netMsg);
+                        netMsg.ConvertToACK();
                         //这里需要发送ACK报文
-
+                        service.SendMessage(netMsg, PeerEndPoint);
                         //发送后进行原始报文数据的处理
-                        HandleNetMessage(netMsg);
+                        HandleMsgSN(netMsg);
                     }
                     break;
-            }
-        }
-        void HandleNetMessage(UdpNetworkMessage netMsg)
-        {
-            if (netMsg.SN <= HandleSN)
-            {
-                return;
-            }
-            if (netMsg.SN - HandleSN > 1)
-            {
-                if (msgDict.TryAdd(netMsg.SN, netMsg))
-                {
-                    //收到错序报文，存储起来
-                }
-                return;
-            }
-            HandleSN = netMsg.SN;
-            //NetworkEventCore.Instance.Dispatch(netMsg.m)
-            UdpNetworkMessage udpNextMsg;
-            if(msgDict.TryRemove(HandleSN+1,out udpNextMsg))
-            {
-                HandleNetMessage(udpNextMsg);
             }
         }
         /// <summary>
         /// 轮询更新，创建Peer对象时候将此方法加入监听；
         /// </summary>
-        public void OnRefresh()
+        /// <param name="service">服务端的Peer</param>
+        public async void OnPolling(UdpServerService service)
         {
-            if (IsAbort)
+            await Task.Delay(interval);
+            if (!IsConnect)
                 return;
             foreach (var msg in msgDict.Values)
             {
                 if (msg.RecurCount >= 20)
                 {
-                    IsAbort = true;
+                    IsConnect = false;
                     return;
                 }
                 if (Utility.Time.MillisecondTimeStamp() - msg.TS >= (msg.RecurCount + 1) * interval)
@@ -120,32 +89,38 @@ namespace Cosmos.Network
                     //重发次数+1
                     msg.RecurCount += 1;
                     //超时重发
-
+                    service.SendMessage(msg,PeerEndPoint);
                 }
             }
         }
         /// <summary>
-        /// 发送网络消息包到远程
+        /// 对网络消息进行编码
         /// </summary>
-        /// <param name="netMsg">消息包</param>
-      public void SendMsg(UdpService service,UdpNetworkMessage netMsg)
+        /// <param name="netMsg">生成的消息</param>
+        /// <returns>是否编码成功</returns>
+        public bool EncodeMessage(ref UdpNetworkMessage netMsg)
         {
-            netMsg.TS = Utility.Time.MillisecondTimeStamp ();
+            netMsg.TS = Utility.Time.MillisecondTimeStamp();
             SendSN += 1;
             netMsg.SN = SendSN;
             netMsg.EncodeMessage();
-            service.SendMessage(netMsg.Buffer, PeerEndPoint);
+            bool result=false;
             if (Conv != 0)
             {
-                //会话ID不未0，则缓存入ACK容器中，等接收成功后进行移除
-                ackMsgDict.TryAdd(netMsg.SN, netMsg);
+                //若会话ID不为0，则缓存入ACK容器中，等接收成功后进行移除
+                result= ackMsgDict.TryAdd(netMsg.SN, netMsg);
             }
+            return  result; ;
+        }
+        public void Close()
+        {
+            IsConnect = false;   
         }
         /// <summary>
-        /// 处理报文
+        /// 处理报文序号
         /// </summary>
         /// <param name="netMsg">网络消息</param>
-      void HandleNetMsg(UdpNetworkMessage netMsg)
+      void HandleMsgSN(UdpNetworkMessage netMsg)
         {
             //sn小于当前处理HandleSN则表示已经处理过的消息；
             if (netMsg.SN <= HandleSN)
@@ -156,15 +131,13 @@ namespace Cosmos.Network
             {
                 //对错序报文进行缓存
                 msgDict.TryAdd(netMsg.SN, netMsg);
-                NetworkEventCore.Instance.Dispatch(netMsg.MsgID, netMsg);
             }
             HandleSN = netMsg.SN;
             UdpNetworkMessage nxtNetMsg;
             if(msgDict.TryRemove(HandleSN+1,out nxtNetMsg))
             {
-                HandleNetMsg(nxtNetMsg);
+                HandleMsgSN(nxtNetMsg);
             }
         }
-
     }
 }

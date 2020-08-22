@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Cosmos
 {
-   public class NetworkCode
+    public interface PollingHelper:IRefreshable,IOperable
     {
-        public const ushort SEND_MESSAGE = 0;
+
     }
 }

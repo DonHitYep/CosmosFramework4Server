@@ -35,6 +35,7 @@ namespace Cosmos
         /// </summary>
         public uint Rcv_nxt { get; set; }
         /// <summary>
+        /// serial number
         ///当前 message序号，按1累次递增。
         /// </summary>
         public uint SN { get; set; }
@@ -66,13 +67,13 @@ namespace Cosmos
         /// </summary>
         public ushort RecurCount { get; set; }
         /// <summary>
-        /// 存储消息字节流的内存
-        /// </summary>
-        public byte[] Buffer { get; set; }
-        /// <summary>
         /// 是否是完整报文
         /// </summary>
         public bool IsFull { get; private set; }
+        /// <summary>
+        /// 存储消息字节流的内存
+        /// </summary>
+        byte[] Buffer { get; set; }
         /// <summary>
         /// 消息报文构造
         /// </summary>
@@ -88,14 +89,6 @@ namespace Cosmos
             Cmd = cmd;
             ServiceMsg = message;
             Rcv_nxt = sn;
-        }
-        public UdpNetworkMessage(UdpNetworkMessage udpNetMsg)
-        {
-            Length = 0;
-            Conv = udpNetMsg.Conv;
-            SN = udpNetMsg.SN;
-            Rcv_nxt = SN;
-            Cmd = KcpProtocol.ACK; 
         }
         /// <summary>
         /// ACK报文构造
@@ -181,6 +174,19 @@ namespace Cosmos
                 Array.Copy(ServiceMsg, 0, data, 30, ServiceMsg.Length);
             Buffer = data;
             return data;
+        }
+        public byte[] GetBuffer()
+        {
+            return EncodeMessage();
+        }
+        /// <summary>
+        /// 转换为ACK报文
+        /// </summary>
+        public void ConvertToACK()
+        {
+            Length = 0;
+            Cmd = KcpProtocol.ACK;
+            DecodeMessage(Buffer);
         }
         public void Clear()
         {

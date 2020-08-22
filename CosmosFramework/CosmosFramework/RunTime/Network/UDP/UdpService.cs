@@ -16,7 +16,7 @@ namespace Cosmos.Network
     /// UDP socket服务；
     /// 这里管理其他接入的远程对象；
     /// </summary>
-    public class UdpService : IRefreshable, IControllable
+    public class UdpService : INetworkService, IControllable
     {
         protected UdpClient udpSocket;
         /// <summary>
@@ -26,7 +26,7 @@ namespace Cosmos.Network
         /// <summary>
         /// 对象IP
         /// </summary>
-        protected string ip { get; set; }
+        protected string ip = "127.0.0.1";
         /// <summary>
         /// 对象端口
         /// </summary>
@@ -34,12 +34,24 @@ namespace Cosmos.Network
         protected ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
         protected uint conv = 0;
         public bool IsPause { get; private set; }
-
-        public UdpService()
+        public virtual void OnInitialization()
         {
             endPoint = new IPEndPoint(IPAddress.Parse(ip), port);
             //构造传入0表示接收任意端口收发的数据
             udpSocket = new UdpClient(0);
+            OnReceive();
+        }
+        /// <summary>
+        /// 非空虚函数；
+        /// 关闭这个服务；
+        /// </summary>
+        public virtual void OnTermination()
+        {
+            if (udpSocket != null)
+            {
+                udpSocket.Close();
+                udpSocket = null;
+            }
         }
         /// <summary>
         /// 异步接收网络消息接口
@@ -52,6 +64,7 @@ namespace Cosmos.Network
                 {
                     UdpReceiveResult result = await udpSocket.ReceiveAsync();
                     awaitHandle.Enqueue(result);
+                    OnReceive();
                 }
                 catch (Exception e)
                 {
@@ -60,48 +73,18 @@ namespace Cosmos.Network
             }
         }
         /// <summary>
+        /// 空虚函数;
         /// 发送报文信息
         /// </summary>
-        /// <param name="data">报文数据</param>
-        public virtual async void SendMessage(byte[] data, IPEndPoint endPoint)
-        {
-            if (udpSocket != null)
-            {
-                try
-                {
-                    int length = await udpSocket.SendAsync(data, data.Length, endPoint);
-                    if (length == data.Length)
-                    {
-                        //长度相等表示完全发送
-                    }
-                    else
-                    {
-                        //若丢包，则重新发送
-                        SendMessage(data, endPoint);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Utility.Debug.LogError($"发送异常:{e.Message}");
-                }
-            }
-        }
-        public virtual void Close()
-        {
-            if (udpSocket != null)
-            {
-                udpSocket.Close();
-                udpSocket = null;
-            }
-        }
+        /// <param name="conv">会话ID</param>
+        /// <param name="data">数据报文</param>
+        /// <param name="endPoint">远程对象</param>
+        public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint){}
         /// <summary>
+        /// 空虚函数；
         /// 轮询更新;
         /// </summary>
-        public virtual void OnRefresh()
-        {
-
-        }
-
+        public  virtual void OnRefresh(){}
         public void OnPause()
         {
             IsPause = true;

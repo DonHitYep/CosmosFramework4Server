@@ -17,5 +17,10 @@ namespace Cosmos
         {
             return null;
         }
+
+        public byte[] GetBuffer()
+        {
+            return EncodeMessage();
+        }
     }
 }

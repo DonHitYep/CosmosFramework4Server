@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 namespace Cosmos.Reference
 {
-    internal sealed class ReferencePoolManager :ConcurrentSingleton<ReferencePoolManager>
+    public sealed class ReferencePoolManager :ModuleBase<ReferencePoolManager>
     {
         #region Properties
         /// <summary>
@@ -14,7 +14,7 @@ namespace Cosmos.Reference
         #endregion
 
         #region Methods
-        internal int GetPoolCount<T>() 
+        public int GetPoolCount<T>() 
             where T : class, IReference, new()
         {
             try
@@ -26,7 +26,7 @@ namespace Cosmos.Reference
                 throw new ArgumentNullException("Type :" + typeof(T).FullName + " not register in reference pool");
             }
         }
-        internal T Spawn<T>() 
+        public T Spawn<T>() 
             where T: class, IReference ,new()
         {
             Type type = typeof(T);
@@ -36,7 +36,7 @@ namespace Cosmos.Reference
             }
             return referenceDict[type].Spawn<T>() as T;
         }
-        internal IReference SpawnInterface<T>()
+        public IReference SpawnInterface<T>()
             where T : class, IReference, new()
         {
             Type type = typeof(T);
@@ -46,7 +46,7 @@ namespace Cosmos.Reference
             }
             return referenceDict[type].Spawn<T>();
         }
-        internal IReference Spawn(Type type)
+        public IReference Spawn(Type type)
         {
             if (!referenceDict.ContainsKey(type))
             {
@@ -54,14 +54,14 @@ namespace Cosmos.Reference
             }
             return referenceDict[type].Spawn(type);
         }
-        internal void Despawn(IReference refer)
+        public void Despawn(IReference refer)
         {
             Type type = refer.GetType();
             if (!referenceDict.ContainsKey(type))
                 referenceDict.Add(type, new ReferenceSpawnPool());
             referenceDict[type].Despawn(refer);
         }
-        internal void Despawns(params IReference[] refers)
+        public void Despawns(params IReference[] refers)
         {
             for (int i = 0; i < refers.Length; i++)
             {
@@ -71,7 +71,7 @@ namespace Cosmos.Reference
                 referenceDict[type].Despawn(refers[i]);
             }
         }
-        internal void Despawns<T>(List<T> refers)
+        public void Despawns<T>(List<T> refers)
             where T:class ,IReference,new()
         {
             Type type = typeof(T);
@@ -87,7 +87,7 @@ namespace Cosmos.Reference
             }
             refers.Clear();
         }
-        internal void Despawns<T>(T[] refers)
+        public void Despawns<T>(T[] refers)
             where T :class,IReference,new()
         {
             Type type = typeof(T);
@@ -102,20 +102,20 @@ namespace Cosmos.Reference
                 referenceDict[type].Despawn(refers[i]);
             }
         }
-        internal void Clear(Type type)
+        public void Clear(Type type)
         {
             if (referenceDict.ContainsKey(type))
             {
                 referenceDict[type].Clear();
             }
         }
-        internal void Clear<T>()
+        public void Clear<T>()
             where T : class, IReference, new()
         {
             Type type = typeof(T);
             Clear(type);
         }
-        internal void ClearAll()
+        public void ClearAll()
         {
             foreach (var referPool in referenceDict)
             {
