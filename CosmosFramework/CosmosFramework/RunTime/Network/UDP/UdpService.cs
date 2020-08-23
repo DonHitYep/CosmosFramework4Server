@@ -20,10 +20,6 @@ namespace Cosmos.Network
     {
         protected UdpClient udpSocket;
         /// <summary>
-        /// IP对象；
-        /// </summary>
-        protected IPEndPoint endPoint;
-        /// <summary>
         /// 对象IP
         /// </summary>
         protected string ip = "127.0.0.1";
@@ -36,9 +32,8 @@ namespace Cosmos.Network
         public bool IsPause { get; private set; }
         public virtual void OnInitialization()
         {
-            endPoint = new IPEndPoint(IPAddress.Parse(ip), port);
-            //构造传入0表示接收任意端口收发的数据
-            udpSocket = new UdpClient(0);
+            udpSocket = new UdpClient(port);
+            OnReceive();
         }
         /// <summary>
         /// 非空虚函数；
@@ -63,6 +58,7 @@ namespace Cosmos.Network
                 {
                     UdpReceiveResult result = await udpSocket.ReceiveAsync();
                     awaitHandle.Enqueue(result);
+                    OnReceive();
                 }
                 catch (Exception e)
                 {
@@ -82,7 +78,7 @@ namespace Cosmos.Network
         /// 非空虚函数；
         /// 轮询更新;
         /// </summary>
-        public  virtual void OnRefresh(){ OnReceive(); }
+        public  virtual void OnRefresh(){ }
         public void OnPause(){IsPause = true;}
         public void OnUnPause(){IsPause = false;}
     }

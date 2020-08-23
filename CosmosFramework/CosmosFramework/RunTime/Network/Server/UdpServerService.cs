@@ -46,6 +46,7 @@ namespace Cosmos
                                 //消息未完全发送，则重新发送
                                 SendMessage(udpNetMsg, endPoint);
                             }
+                            Utility.Debug.LogError($"发送消息");
                         }
                         catch (Exception e)
                         {
@@ -103,6 +104,7 @@ namespace Cosmos
                 peer = new UdpClientPeer(udpNetMsg.Conv);
                 result = clientDict.TryAdd(udpNetMsg.Conv, peer);
                 pollingHandler += peer.OnPolling;
+                Utility.Debug.LogInfo($"CreateClientPeer  conv : {udpNetMsg.Conv}");
             }
             return result;
         }

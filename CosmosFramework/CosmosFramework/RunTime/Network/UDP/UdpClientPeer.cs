@@ -105,11 +105,11 @@ namespace Cosmos.Network
             SendSN += 1;
             netMsg.SN = SendSN;
             netMsg.EncodeMessage();
-            bool result=false;
+            bool result=true;
             if (Conv != 0)
             {
                 //若会话ID不为0，则缓存入ACK容器中，等接收成功后进行移除
-                result= msgDict.TryAdd(netMsg.SN, netMsg);
+             /*   result=*/ msgDict.TryAdd(netMsg.SN, netMsg);
             }
             return  result; ;
         }

@@ -60,7 +60,6 @@ namespace Cosmos.Network
                     {
                         service = new UdpServerService();
                         service.OnInitialization();
-                        PollingManager.Instance.AddPolling(service.OnRefresh);
                     }
                     break;
             }

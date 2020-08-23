@@ -11,9 +11,9 @@ namespace CosmosFramework4Server
         static void Main(string[] args)
         {
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
-            Utility.Debug.LogInfo("Server start Running");
             NetworkManager.Instance.InitNetwork(System.Net.Sockets.ProtocolType.Udp);
             Task.Run(PollingManager.Instance.OnRefresh);
+            PollingManager.Instance.AddPolling(NetworkManager.Instance.OnRefresh);
             Task.Run(AsyncCoroutine.Instance.Start);
             while (true){}
             Console.ReadLine();
