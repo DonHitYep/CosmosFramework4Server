@@ -9,7 +9,7 @@ namespace Cosmos.Network
     /// <summary>
     /// 此模块为客户端网络管理类
     /// </summary>
-    public sealed class NetworkManager : Module<NetworkManager>,IRefreshable
+    public sealed class NetworkManager : Module<NetworkManager>
     {
         string serverIP;
         int serverPort;
@@ -36,19 +36,23 @@ namespace Cosmos.Network
                 return clientEndPoint;
             }
         }
-        public void OnRefresh()
+        public override void OnInitialization()
         {
-            service.OnRefresh();
+            IsPause = false;
+        }
+        public override void  OnRefresh()
+        {
+            service?.OnRefresh();
         }
         public void SendNetworkMessage(INetworkMessage netMsg, IPEndPoint endPoint)
         {
-            service.SendMessage(netMsg, endPoint);
+            //service.SendMessage(netMsg, endPoint);
         }
         /// <summary>
         /// 初始化网络模块
         /// </summary>
         /// <param name="protocolType"></param>
-        public void InitNetwork(ProtocolType protocolType)
+        public void Connect(ProtocolType protocolType)
         {
             switch (protocolType)
             {

@@ -73,13 +73,13 @@ namespace Cosmos.Network
         /// <param name="conv">会话ID</param>
         /// <param name="data">数据报文</param>
         /// <param name="endPoint">远程对象</param>
-        public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint){}
+        public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint) { }
         /// <summary>
         /// 非空虚函数；
         /// 轮询更新;
         /// </summary>
-        public  virtual void OnRefresh(){ }
-        public void OnPause(){IsPause = true;}
-        public void OnUnPause(){IsPause = false;}
+        public virtual void OnRefresh() { }
+        public void OnPause() { IsPause = true; }
+        public void OnUnPause() { IsPause = false; }
     }
 }

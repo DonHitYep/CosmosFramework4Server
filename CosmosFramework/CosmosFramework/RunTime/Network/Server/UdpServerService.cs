@@ -29,10 +29,10 @@ namespace Cosmos
         public override async void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint)
         {
             UdpClientPeer peer;
-            if(clientDict.TryGetValue(netMsg.Conv,out peer))
+            if (clientDict.TryGetValue(netMsg.Conv, out peer))
             {
                 UdpNetworkMessage udpNetMsg = netMsg as UdpNetworkMessage;
-                var result= peer.EncodeMessage(ref udpNetMsg);
+                var result = peer.EncodeMessage(ref udpNetMsg);
                 if (result)
                 {
                     if (udpSocket != null)
@@ -40,13 +40,13 @@ namespace Cosmos
                         try
                         {
                             var buffer = udpNetMsg.GetBuffer();
-                            int length = await udpSocket.SendAsync( buffer, buffer.Length, endPoint);
+                            int length = await udpSocket.SendAsync(buffer, buffer.Length, endPoint);
                             if (length != buffer.Length)
                             {
                                 //消息未完全发送，则重新发送
                                 SendMessage(udpNetMsg, endPoint);
                             }
-                            Utility.Debug.LogError($"发送消息");
+                            Utility.Debug.LogInfo($"发送消息");
                         }
                         catch (Exception e)
                         {
@@ -58,53 +58,58 @@ namespace Cosmos
         }
         public override void OnRefresh()
         {
-            base.OnRefresh();
             pollingHandler?.Invoke(this);
             if (awaitHandle.Count > 0)
             {
+                Utility.Debug.LogInfo($"{this.GetType().Name} 处理网络消息");
                 UdpReceiveResult data;
                 if (awaitHandle.TryDequeue(out data))
                 {
                     UdpNetworkMessage netMsg = ReferencePoolManager.Instance.Spawn<UdpNetworkMessage>();
-                    if (netMsg.Conv == 0)
+                    netMsg.CacheDecodeBuffer(data.Buffer);
+                    Utility.Debug.LogInfo($" 解码从客户端接收的报文：{netMsg.ToString()}");
+                    if (netMsg.IsFull)
                     {
-                        conv += 1;
-                        netMsg.Conv = conv;
-                        UdpClientPeer peer;
-                        if (CreateClientPeer(netMsg,out peer))
+                        if (netMsg.Conv == 0)
                         {
-                            peer.SetPeerEndPoint(data.RemoteEndPoint);
+                            conv += 1;
+                            netMsg.Conv = conv;
+                            UdpClientPeer peer;
+                            CreateClientPeer(netMsg, data.RemoteEndPoint, out peer);
                         }
-                    }
-                    UdpClientPeer tmpPeer;
-                    if(clientDict.TryGetValue(netMsg.Conv,out tmpPeer))
-                    {
-                        //如果peer失效，则移除
-                        if (!tmpPeer.IsConnect)
+                        UdpClientPeer tmpPeer;
+                        if (clientDict.TryGetValue(netMsg.Conv, out tmpPeer))
                         {
-                            pollingHandler -= tmpPeer.OnPolling;
-                            UdpClientPeer abortPeer;
-                            clientDict.TryRemove(netMsg.Conv, out abortPeer);
-                            peerAbortHandler?.Invoke(abortPeer.Conv);
+                            //如果peer失效，则移除
+                            if (!tmpPeer.IsConnect)
+                            {
+                                pollingHandler -= tmpPeer.OnPolling;
+                                UdpClientPeer abortPeer;
+                                clientDict.TryRemove(netMsg.Conv, out abortPeer);
+                                peerAbortHandler?.Invoke(abortPeer.Conv);
+                                Utility.Debug.LogInfo($"移除失效peer，conv{netMsg.Conv}:");
+                            }
+                            else
+                            {
+                                tmpPeer.MsgHandler(this, netMsg);
+                            }
                         }
-                        else
-                        {
-                            tmpPeer.MsgHandler(this,netMsg);
-                        }
+                        ReferencePoolManager.Instance.Despawn(netMsg);
                     }
                 }
             }
         }
-        bool CreateClientPeer(UdpNetworkMessage udpNetMsg, out UdpClientPeer peer)
+        bool CreateClientPeer(UdpNetworkMessage udpNetMsg, IPEndPoint endPoint, out UdpClientPeer peer)
         {
             peer = default;
             bool result = false;
             if (!clientDict.TryGetValue(udpNetMsg.Conv, out peer))
             {
                 peer = new UdpClientPeer(udpNetMsg.Conv);
+                peer.SetPeerEndPoint(endPoint);
                 result = clientDict.TryAdd(udpNetMsg.Conv, peer);
                 pollingHandler += peer.OnPolling;
-                Utility.Debug.LogInfo($"CreateClientPeer  conv : {udpNetMsg.Conv}");
+                Utility.Debug.LogInfo($"CreateClientPeer  conv : {udpNetMsg.Conv}; PeerCount : {clientDict.Count}");
             }
             return result;
         }

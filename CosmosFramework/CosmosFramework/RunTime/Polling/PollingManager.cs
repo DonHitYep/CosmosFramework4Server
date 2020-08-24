@@ -4,20 +4,22 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cosmos
+namespace Cosmos.Polling
 {
-    public class PollingManager:Module<PollingManager>,IRefreshable,IControllable
+    public class PollingManager : Module<PollingManager>, IRefreshable, IControllable
     {
         Action pollingHandler;
-
-        public bool IsPause { get; private set; }
+        public override void OnInitialization()
+        {
+            IsPause = false;
+        }
         public void AddPolling(Action handler)
         {
             try
             {
                 pollingHandler += handler;
             }
-            catch 
+            catch
             {
                 Utility.Debug.LogError("无法添加监听到轮询池中");
             }
@@ -33,22 +35,11 @@ namespace Cosmos
                 Utility.Debug.LogError("无法从轮询池中移除监听");
             }
         }
-        public  void OnRefresh()
+        public override void OnRefresh()
         {
-            while (true)
-            {
-                if (IsPause)
-                    continue;
-                pollingHandler?.Invoke();
-            }
-        }
-        public void OnPause()
-        {
-            IsPause = true;
-        }
-        public void OnUnPause()
-        {
-            IsPause = false;
+            if (IsPause)
+                return;
+            pollingHandler?.Invoke();
         }
     }
 }

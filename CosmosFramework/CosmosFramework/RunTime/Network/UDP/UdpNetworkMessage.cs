@@ -98,7 +98,7 @@ namespace Cosmos
         /// <param name="sn">msgID</param>
         /// <param name="cmd">协议</param>
         /// <param name="msgID">前后端消息ID</param>
-        public UdpNetworkMessage(uint conv, uint snd_una,uint sn, ushort cmd,ushort msgID)
+        public UdpNetworkMessage(uint conv, uint snd_una, uint sn, ushort cmd, ushort msgID)
         {
             Conv = conv;
             Snd_una = snd_una;
@@ -113,16 +113,27 @@ namespace Cosmos
             Buffer = buffer;
             DecodeMessage(Buffer);
         }
+        public void CacheDecodeBuffer(byte[] buffer)
+        {
+            Buffer = buffer;
+            DecodeMessage(Buffer);
+        }
         /// <summary>
         /// 解析UDP数据报文
         /// </summary>
         /// <param name="buffer"></param>
         public void DecodeMessage(byte[] buffer)
         {
+            if (buffer == null)
+            {
+                Utility.Debug.LogError("DecodeMessage 解码消息 ，buffer为空，UdpNetworkMessage line 124 ");
+                IsFull = false;
+                return;
+            }
             if (buffer.Length >= 2)
             {
                 Length = BitConverter.ToUInt16(buffer, 0);
-                if (buffer.Length == Length + 28)
+                if (buffer.Length == Length + 30)
                 {
                     IsFull = true;
                 }
@@ -130,18 +141,20 @@ namespace Cosmos
             else
             {
                 IsFull = false;
+                return;
             }
             Conv = BitConverter.ToUInt32(buffer, 2);
             Snd_una = BitConverter.ToUInt32(buffer, 6);
-            Rcv_nxt= BitConverter.ToUInt32(buffer, 10);
-            SN= BitConverter.ToUInt32(buffer, 14);
-            TS= BitConverter.ToInt64(buffer, 18);
+            Rcv_nxt = BitConverter.ToUInt32(buffer, 10);
+            SN = BitConverter.ToUInt32(buffer, 14);
+            TS = BitConverter.ToInt64(buffer, 18);
             Cmd = BitConverter.ToUInt16(buffer, 26);
-            MsgID= BitConverter.ToUInt16(buffer, 28);
+            MsgID = BitConverter.ToUInt16(buffer, 28);
             if (Cmd == KcpProtocol.MSG)
             {
                 ServiceMsg = new byte[Length];
                 Array.Copy(buffer, 30, ServiceMsg, 0, Length);
+                Utility.Debug.LogInfo($" Conv : {Conv} ,Msg : {Utility.Converter.GetString(ServiceMsg)}");
             }
         }
         /// <summary>
@@ -155,12 +168,12 @@ namespace Cosmos
                 Length = 0;
             byte[] len = BitConverter.GetBytes(Length);
             byte[] conv = BitConverter.GetBytes(Conv);
-            byte[] snd_una= BitConverter.GetBytes(Snd_una);
-            byte[] rcv_nxt= BitConverter.GetBytes(Rcv_nxt);
+            byte[] snd_una = BitConverter.GetBytes(Snd_una);
+            byte[] rcv_nxt = BitConverter.GetBytes(Rcv_nxt);
             byte[] sn = BitConverter.GetBytes(SN);
             byte[] ts = BitConverter.GetBytes(TS);
             byte[] cmd = BitConverter.GetBytes(Cmd);
-            byte[] msgID= BitConverter.GetBytes(MsgID);
+            byte[] msgID = BitConverter.GetBytes(MsgID);
             Array.Copy(len, 0, data, 0, 2);
             Array.Copy(conv, 0, data, 2, 4);
             Array.Copy(snd_una, 0, data, 6, 4);
@@ -182,11 +195,18 @@ namespace Cosmos
         /// <summary>
         /// 转换为ACK报文
         /// </summary>
-        public void ConvertToACK()
+        public  byte[] ConvertToACKBuffer()
         {
             Length = 0;
             Cmd = KcpProtocol.ACK;
-            DecodeMessage(Buffer);
+            return EncodeMessage();
+        }
+        public UdpNetworkMessage ConvertToACKNetMsg()
+        {
+            Length = 0;
+            Cmd = KcpProtocol.ACK;
+            EncodeMessage();
+            return this;
         }
         public void Clear()
         {
@@ -200,6 +220,11 @@ namespace Cosmos
             MsgID = 0;
             ServiceMsg = null;
             IsFull = false;
+        }
+        public override string ToString()
+        {
+            string str = $"Length:{Length} ; Conv:{Conv} ; Snd_una:{Snd_una} ; Rcv_nxt:{Rcv_nxt} ; SN:{SN} ; TS :{TS } ;Cmd:{Cmd} ; MsgID : {MsgID} ; RecurCount:{RecurCount} ";
+            return str;
         }
     }
 }

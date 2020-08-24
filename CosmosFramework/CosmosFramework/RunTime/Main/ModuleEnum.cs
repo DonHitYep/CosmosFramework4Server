@@ -7,22 +7,10 @@
     /// </summary>
     public enum ModuleEnum
     {
-        Audio,
-        Mono,
-        ObjectPool,
-        Resource,
-        UI,
-        Event,
-        Entity,
-        Input,
-        FSM,
         Network,
-        Scene,
-        Config,
         Data,
-        Controller,
         ReferencePool,
-        Exception,
-        Hotfix
+        Log,
+        Polling
     }
 }

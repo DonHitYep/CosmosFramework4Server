@@ -24,21 +24,32 @@ namespace Cosmos.Network
         /// <summary>
         /// 当前Peer是否处于连接状态
         /// </summary>
-        public bool IsConnect { get; private set; } = false;
+        public bool IsConnect { get; private set; }
+        /// <summary>
+        /// 最后一次更新时间
+        /// </summary>
+        long latestPollingTime;
         /// <summary>
         /// 并发发送消息的字典；
         /// 整理错序报文；
         /// 临时起到ACK缓存的作用
         /// </summary>
         ConcurrentDictionary<uint, UdpNetworkMessage> msgDict = new ConcurrentDictionary<uint, UdpNetworkMessage>();
-        const int interval = 100;
+        /// <summary>
+        /// 解析间隔
+        /// </summary>
+        const int interval = 2000;
         public UdpClientPeer(uint conv)
         {
             this.Conv = conv;
+            IsConnect = true;
+            latestPollingTime = Utility.Time.MillisecondNow()+ interval;
         }
         public void SetPeerEndPoint(IPEndPoint endPoint)
         {
             this.PeerEndPoint = endPoint;
+            IsConnect = true;
+            latestPollingTime = Utility.Time.MillisecondNow() + interval;
         }
         public void MsgHandler(UdpServerService service,INetworkMessage msg)
         {
@@ -53,18 +64,20 @@ namespace Cosmos.Network
                             Utility.Debug.LogError($"网络消息ACK接收异常 :{tmpMsg.SN} ");
                         else
                         {
-                            Utility.Debug.LogInfo($"网络消息 : ID :{Conv},内容：{Utility.Encode.ConvertToString(tmpMsg.ServiceMsg)} ");
+                            Utility.Debug.LogInfo($"网络ACK消息 : Conv :{Conv}, ID : {tmpMsg.MsgID}");
                         }
                     }
                     break;
                 case KcpProtocol.MSG:
                     {
                         //生成一个ACK报文，并返回发送
-                        netMsg.ConvertToACK();
+                        var ack= netMsg.ConvertToACKNetMsg();
                         //这里需要发送ACK报文
-                        service.SendMessage(netMsg, PeerEndPoint);
+                        service.SendMessage(ack, PeerEndPoint);
+                        Utility.Debug.LogInfo($"ACK 报文：{ack.ToString()}");
                         //发送后进行原始报文数据的处理
                         HandleMsgSN(netMsg);
+                        Utility.Debug.LogInfo($"发送ACK报文，conv :{Conv} ;{PeerEndPoint.Address} ;{PeerEndPoint.Port}");
                     }
                     break;
             }
@@ -73,19 +86,26 @@ namespace Cosmos.Network
         /// 轮询更新，创建Peer对象时候将此方法加入监听；
         /// </summary>
         /// <param name="service">服务端的Peer</param>
-        public async void OnPolling(UdpServerService service)
+        public  void OnPolling(UdpServerService service)
         {
-            await Task.Delay(interval);
+            long now = Utility.Time.MillisecondNow();
+            if (now<=latestPollingTime )
+                return;
+            latestPollingTime=now+ interval;
+            //await Task.Delay(interval);
             if (!IsConnect)
                 return;
             foreach (var msg in msgDict.Values)
             {
-                if (msg.RecurCount >= 20)
+                if (msg.RecurCount >= 30)
                 {
                     IsConnect = false;
+                    Utility.Debug.LogInfo($"Peer Conv:{Conv } 失去连接");
                     return;
                 }
-                if (Utility.Time.MillisecondTimeStamp() - msg.TS >= (msg.RecurCount + 1) * interval)
+                var time = Utility.Time.MillisecondTimeStamp() - msg.TS;
+                //Utility.Debug.LogInfo($"Conv:{Conv} ; Time:{time}");
+                if (/*Utility.Time.MillisecondTimeStamp() - msg.TS */time>= (msg.RecurCount + 1) * interval)
                 {
                     //重发次数+1
                     msg.RecurCount += 1;

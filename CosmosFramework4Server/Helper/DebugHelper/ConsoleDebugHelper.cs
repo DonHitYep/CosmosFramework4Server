@@ -12,6 +12,7 @@ namespace ProtocolCore
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"LogError : { msg}");
+            GameManager.LogManager.Error(null, msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
         }
@@ -21,6 +22,7 @@ namespace ProtocolCore
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"LogInfo : { msg}");
+            GameManager.LogManager.Info(msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
         }
@@ -38,6 +40,7 @@ namespace ProtocolCore
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = color;
             Console.WriteLine($"LogInfo : { msg}");
+            GameManager.LogManager.Info(msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
         }
@@ -47,6 +50,7 @@ namespace ProtocolCore
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"LogWarring : { msg}");
+            GameManager.LogManager.Warring(msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
         }

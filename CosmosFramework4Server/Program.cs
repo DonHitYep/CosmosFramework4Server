@@ -1,22 +1,36 @@
 ﻿using System;
 using Cosmos;
+using Cosmos.Log;
 using Cosmos.Network;
 using System.Threading.Tasks;
 using ProtocolCore;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace CosmosFramework4Server
 {
     class Program
     {
+        public delegate bool ControlCtrlDelegate(int CtrlType);
+        [DllImport("kernel32.dll")]
+        private static extern bool SetConsoleCtrlHandler(ControlCtrlDelegate HandlerRoutine, bool Add);
+        static ControlCtrlDelegate newDelegate = new ControlCtrlDelegate(HandlerRoutine);
+        public static bool HandlerRoutine(int CtrlType)
+        {
+            Utility.Debug.LogInfo("Server Shuntdown !");//按控制台关闭按钮关闭 
+            return false;
+        }
         static void Main(string[] args)
         {
+             SetConsoleCtrlHandler(newDelegate, true);
+            GameManager.LogManager.SetHelper(new ConsoleLogHelper());
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
-            NetworkManager.Instance.InitNetwork(System.Net.Sockets.ProtocolType.Udp);
-            Task.Run(PollingManager.Instance.OnRefresh);
-            PollingManager.Instance.AddPolling(NetworkManager.Instance.OnRefresh);
-            Task.Run(AsyncCoroutine.Instance.Start);
+            Utility.Debug.LogInfo("Server Start Running !");
+            GameManager.NetworkManager.Connect(System.Net.Sockets.ProtocolType.Udp);
+            Task.Run(GameManagerAgent.Instance.OnRefresh);
             while (true){}
             Console.ReadLine();
+            //Task.Run(AsyncCoroutine.Instance.Start);
         }
         /// <summary>
         /// 异步单线程协程测试函数
