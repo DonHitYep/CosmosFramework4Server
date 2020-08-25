@@ -24,7 +24,6 @@ namespace Cosmos
         public override void OnInitialization()
         {
             base.OnInitialization();
-            Utility.Debug.LogInfo("UdpServerService OnInitialization");
         }
         public override async void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint)
         {
@@ -46,7 +45,35 @@ namespace Cosmos
                                 //消息未完全发送，则重新发送
                                 SendMessage(udpNetMsg, endPoint);
                             }
-                            Utility.Debug.LogInfo($"发送消息");
+                        }
+                        catch (Exception e)
+                        {
+                            Utility.Debug.LogError($"发送异常:{e.Message}");
+                        }
+                    }
+                }
+            }
+        }
+        public override  async void SendMessage(INetworkMessage netMsg)
+        {
+            UdpClientPeer peer;
+            if (clientDict.TryGetValue(netMsg.Conv, out peer))
+            {
+                UdpNetworkMessage udpNetMsg = netMsg as UdpNetworkMessage;
+                var result = peer.EncodeMessage(ref udpNetMsg);
+                if (result)
+                {
+                    if (udpSocket != null)
+                    {
+                        try
+                        {
+                            var buffer = udpNetMsg.GetBuffer();
+                            int length = await udpSocket.SendAsync(buffer, buffer.Length, peer.PeerEndPoint);
+                            if (length != buffer.Length)
+                            {
+                                //消息未完全发送，则重新发送
+                                SendMessage(udpNetMsg);
+                            }
                         }
                         catch (Exception e)
                         {
@@ -61,13 +88,12 @@ namespace Cosmos
             pollingHandler?.Invoke(this);
             if (awaitHandle.Count > 0)
             {
-                Utility.Debug.LogInfo($"{this.GetType().Name} 处理网络消息");
                 UdpReceiveResult data;
                 if (awaitHandle.TryDequeue(out data))
                 {
                     UdpNetworkMessage netMsg = ReferencePoolManager.Instance.Spawn<UdpNetworkMessage>();
                     netMsg.CacheDecodeBuffer(data.Buffer);
-                    Utility.Debug.LogInfo($" 解码从客户端接收的报文：{netMsg.ToString()}");
+                    Utility.Debug.LogInfo($" 解码从客户端接收的报文：{netMsg.ToString()} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)}");
                     if (netMsg.IsFull)
                     {
                         if (netMsg.Conv == 0)
@@ -91,7 +117,7 @@ namespace Cosmos
                             }
                             else
                             {
-                                tmpPeer.MsgHandler(this, netMsg);
+                                tmpPeer.MessageHandler(this, netMsg);
                             }
                         }
                         ReferencePoolManager.Instance.Despawn(netMsg);

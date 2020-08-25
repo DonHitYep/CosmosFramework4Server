@@ -44,9 +44,13 @@ namespace Cosmos.Network
         {
             service?.OnRefresh();
         }
-        public void SendNetworkMessage(INetworkMessage netMsg, IPEndPoint endPoint)
+        public void SendNetworkMessage(INetworkMessage netMsg)
         {
-            //service.SendMessage(netMsg, endPoint);
+            service.SendMessage(netMsg);
+        }
+        public void SendNetworkMessage(INetworkMessage netMsg,IPEndPoint endPoint)
+        {
+            service.SendMessage(netMsg,endPoint);
         }
         /// <summary>
         /// 初始化网络模块
@@ -63,6 +67,33 @@ namespace Cosmos.Network
                 case ProtocolType.Udp:
                     {
                         service = new UdpServerService();
+                        service.OnInitialization();
+                    }
+                    break;
+            }
+        }
+        /// <summary>
+        /// 与远程建立连接；
+        /// 当前只有udp
+        /// </summary>
+        /// <param name="ip">ip地址</param>
+        /// <param name="port">端口号</param>
+        /// <param name="protocolType">协议类型</param>
+        public void Connect(string ip, int port, ProtocolType protocolType)
+        {
+            OnUnPause();
+            switch (protocolType)
+            {
+                case ProtocolType.Tcp:
+                    {
+                    }
+                    break;
+                case ProtocolType.Udp:
+                    {
+                        service = new UdpServerService();
+                        UdpServerService udp = service as UdpServerService;
+                        udp.IP = ip;
+                        udp.Port = port;
                         service.OnInitialization();
                     }
                     break;

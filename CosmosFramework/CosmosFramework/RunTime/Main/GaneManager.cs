@@ -8,13 +8,19 @@ using System.Text;
 
 namespace Cosmos
 {
-   public class GameManager:ConcurrentSingleton<GameManager>
+   public class GameManager:ConcurrentSingleton<GameManager>, IControllable, IRefreshable
     {
+        #region Properties
+        public bool IsPause { get; private set; }
+        /// <summary>
+        /// 轮询更新委托
+        /// </summary>
+        Action refreshHandler;
         int moduleCount = 0;
         static Dictionary<ModuleEnum, IModule> moduleDict;
         internal static Dictionary<ModuleEnum, IModule> ModuleDict { get { return moduleDict; } }
         static ReferencePoolManager referencePoolManager;
-        public  static ReferencePoolManager ReferencePoolManager
+        public static ReferencePoolManager ReferencePoolManager
         {
             get
             {
@@ -65,6 +71,8 @@ namespace Cosmos
                 return logManager ;
             }
         }
+        #endregion
+        #region Methods
         /// <summary>
         /// 构造函数，只有使用到时候才产生
         /// </summary>
@@ -74,6 +82,20 @@ namespace Cosmos
             {
                 moduleDict = new Dictionary<ModuleEnum, IModule>();
             }
+        }
+        public void OnPause()
+        {
+            IsPause = true;
+        }
+        public void OnUnPause()
+        {
+            IsPause = false;
+        }
+        public void OnRefresh()
+        {
+            if (IsPause)
+                return;
+            refreshHandler?.Invoke();
         }
         internal void ModuleInitialization(IModule module)
         {
@@ -89,6 +111,7 @@ namespace Cosmos
             {
                 moduleDict.Add(moduleEnum, module);
                 moduleCount++;
+                refreshHandler += module.OnRefresh;
                 Utility.Debug.LogInfo("Module:\"" + moduleEnum.ToString() + "\" " + "  is OnInitialization" + " based on GameManager");
             }
             else
@@ -96,9 +119,23 @@ namespace Cosmos
                Utility.Debug.LogError( new ArgumentException("Module:\"" + moduleEnum.ToString() + "\" " + " is already exist!")); 
             }
         }
+        internal void DeregisterModule(ModuleEnum module)
+        {
+            if (HasModule(module))
+            {
+                var m = moduleDict[module];
+                refreshHandler -= m.OnRefresh;
+                moduleDict.Remove(module);
+                moduleCount--;
+                Utility.Debug.LogInfo("Module:\"" + module.ToString() + "\" " + "  is OnTermination" + " based on GameManager", MessageColor.DARKBLUE);
+            }
+            else
+                Utility.Debug.LogError( new ArgumentNullException("Module:\"" + module.ToString() + "\" " + " is  not exist!"));
+        }
         internal bool HasModule(ModuleEnum module)
         {
             return moduleDict.ContainsKey(module);
         }
+        #endregion
     }
 }

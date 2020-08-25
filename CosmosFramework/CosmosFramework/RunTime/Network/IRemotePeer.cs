@@ -16,17 +16,11 @@ namespace Cosmos
         /// 会话ID
         /// </summary>
         uint Conv { get; }
-        //string LocalIP { get; }
-        //int LocalPort { get; }
-        //IPAddress LocalIPAddress { get; }
-        //string RemoteIP { get; }
-        //int RemotePort { get; }
-        //IPAddress RemoteIPAddress { get; }
-        ///// <summary>
-        ///// 处理网络消息；
-        ///// </summary>
-        ///// <param name="netMsg">网络消息</param>
-        //void MsgHandler(INetworkMessage netMsg);
+        /// <summary>
+        /// 对当前的peer对象发送消息
+        /// </summary>
+        /// <param name="netMsg">消息体</param>
+        void SendMessage(INetworkMessage netMsg);
         //void AbortConnection();
         //void Disconnect();
         //void Dispose();

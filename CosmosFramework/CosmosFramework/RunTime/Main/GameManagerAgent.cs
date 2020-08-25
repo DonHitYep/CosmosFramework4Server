@@ -4,18 +4,18 @@ using System.Text;
 
 namespace Cosmos
 {
-    public class GameManagerAgent : ConcurrentSingleton<GameManagerAgent>, IRefreshable
+    public class GameManagerAgent : ConcurrentSingleton<GameManagerAgent>, IRefreshable,IControllable
     {
-        bool isPause = false;
+        public bool IsPause { get; private set; }
         public bool Pause
         {
-            get { return isPause; }
+            get { return IsPause; }
             set
             {
-                if (isPause == value)
+                if (IsPause == value)
                     return;
-                isPause = value;
-                if (isPause)
+                IsPause = value;
+                if (IsPause)
                 {
                     OnPause();
                 }
@@ -34,27 +34,17 @@ namespace Cosmos
         {
             while (true)
             {
-                if (isPause)
-                    return;
-                foreach (KeyValuePair<ModuleEnum, IModule> module in moduleDict)
-                {
-                    module.Value?.OnRefresh();
-                }
+                if (!IsPause)
+                    GameManager.Instance.OnRefresh();
             }
         }
-        void OnPause()
+        public void OnPause()
         {
-            foreach (KeyValuePair<ModuleEnum, IModule> module in moduleDict)
-            {
-                module.Value.OnPause();
-            }
+            GameManager.Instance.OnPause();
         }
-        void OnUnPause()
+        public void OnUnPause()
         {
-            foreach (KeyValuePair<ModuleEnum, IModule> module in moduleDict)
-            {
-                module.Value.OnUnPause();
-            }
+            GameManager.Instance.OnUnPause();
         }
     }
 }

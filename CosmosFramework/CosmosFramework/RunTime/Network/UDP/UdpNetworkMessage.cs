@@ -25,10 +25,10 @@ namespace Cosmos
         /// 第一个未确认的包
         /// </summary>
         public uint Snd_una { get; set; }
-        ///// <summary>
-        /////下一个需要发送的msg序号
-        ///// </summary>
-        //public uint Snd_nxt { get; set; }
+        /// <summary>
+        ///下一个需要发送的msg序号
+        /// </summary>
+        public uint Snd_nxt { get; set; }
         /// <summary>
         /// 待接收消息序号；
         /// 这里填充ACK序号；
@@ -53,10 +53,9 @@ namespace Cosmos
         /// </summary>
         public ushort Cmd { get; set; }
         /// <summary>
-        /// 前后端通讯的消息ID；
-        /// 例：设 ID 1011表示登录讯号
+        /// 前后端通讯的操作码；
         /// </summary>
-        public ushort MsgID { get; set; }
+        public ushort OperationCode { get; set; }
         /// <summary>
         /// 业务报文
         /// </summary>
@@ -81,7 +80,7 @@ namespace Cosmos
         /// <param name="sn">msg序号</param>
         /// <param name="cmd">协议ID</param>
         /// <param name="message">消息内容</param>
-        public UdpNetworkMessage(uint conv, uint sn, ushort cmd, byte[] message)
+        public UdpNetworkMessage(uint conv, uint sn, byte cmd, byte[] message)
         {
             Length = (ushort)message.Length;
             Conv = conv;
@@ -104,8 +103,9 @@ namespace Cosmos
             Snd_una = snd_una;
             SN = sn;
             Rcv_nxt = SN;
+            Snd_nxt= SN+1;
             Cmd = cmd;
-            MsgID = msgID;
+            OperationCode = msgID;
         }
         public UdpNetworkMessage() { }
         public UdpNetworkMessage(byte[] buffer)
@@ -126,14 +126,13 @@ namespace Cosmos
         {
             if (buffer == null)
             {
-                Utility.Debug.LogError("DecodeMessage 解码消息 ，buffer为空，UdpNetworkMessage line 124 ");
                 IsFull = false;
                 return;
             }
             if (buffer.Length >= 2)
             {
                 Length = BitConverter.ToUInt16(buffer, 0);
-                if (buffer.Length == Length + 30)
+                if (buffer.Length == Length + 34)
                 {
                     IsFull = true;
                 }
@@ -145,16 +144,16 @@ namespace Cosmos
             }
             Conv = BitConverter.ToUInt32(buffer, 2);
             Snd_una = BitConverter.ToUInt32(buffer, 6);
-            Rcv_nxt = BitConverter.ToUInt32(buffer, 10);
-            SN = BitConverter.ToUInt32(buffer, 14);
-            TS = BitConverter.ToInt64(buffer, 18);
-            Cmd = BitConverter.ToUInt16(buffer, 26);
-            MsgID = BitConverter.ToUInt16(buffer, 28);
+            Snd_nxt = BitConverter.ToUInt32(buffer, 10);
+            Rcv_nxt = BitConverter.ToUInt32(buffer, 14);
+            SN = BitConverter.ToUInt32(buffer, 18);
+            TS = BitConverter.ToInt64(buffer, 22);
+            Cmd = BitConverter.ToUInt16(buffer, 30);
+            OperationCode = BitConverter.ToUInt16(buffer, 32);
             if (Cmd == KcpProtocol.MSG)
             {
                 ServiceMsg = new byte[Length];
-                Array.Copy(buffer, 30, ServiceMsg, 0, Length);
-                Utility.Debug.LogInfo($" Conv : {Conv} ,Msg : {Utility.Converter.GetString(ServiceMsg)}");
+                Array.Copy(buffer, 34, ServiceMsg, 0, Length);
             }
         }
         /// <summary>
@@ -163,28 +162,30 @@ namespace Cosmos
         /// <returns>编码后的消息字节流</returns>
         public byte[] EncodeMessage()
         {
-            byte[] data = new byte[30 + Length];
+            byte[] data = new byte[34 + Length];
             if (Cmd == KcpProtocol.ACK)
                 Length = 0;
             byte[] len = BitConverter.GetBytes(Length);
             byte[] conv = BitConverter.GetBytes(Conv);
             byte[] snd_una = BitConverter.GetBytes(Snd_una);
+            byte[] snd_nxt = BitConverter.GetBytes(Snd_nxt);
             byte[] rcv_nxt = BitConverter.GetBytes(Rcv_nxt);
             byte[] sn = BitConverter.GetBytes(SN);
             byte[] ts = BitConverter.GetBytes(TS);
             byte[] cmd = BitConverter.GetBytes(Cmd);
-            byte[] msgID = BitConverter.GetBytes(MsgID);
+            byte[] msgID = BitConverter.GetBytes(OperationCode);
             Array.Copy(len, 0, data, 0, 2);
             Array.Copy(conv, 0, data, 2, 4);
             Array.Copy(snd_una, 0, data, 6, 4);
-            Array.Copy(rcv_nxt, 0, data, 10, 4);
-            Array.Copy(sn, 0, data, 14, 4);
-            Array.Copy(ts, 0, data, 18, 8);
-            Array.Copy(cmd, 0, data, 26, 2);
-            Array.Copy(msgID, 0, data, 28, 2);
+            Array.Copy(snd_nxt, 0, data, 10, 4);
+            Array.Copy(rcv_nxt, 0, data, 14, 4);
+            Array.Copy(sn, 0, data, 18, 4);
+            Array.Copy(ts, 0, data, 22, 8);
+            Array.Copy(cmd, 0, data, 30, 2);
+            Array.Copy(msgID, 0, data, 32, 2);
             //如果不是ACK报文，则追加数据
             if (Cmd == KcpProtocol.MSG)
-                Array.Copy(ServiceMsg, 0, data, 30, ServiceMsg.Length);
+                Array.Copy(ServiceMsg, 0, data, 34, ServiceMsg.Length);
             Buffer = data;
             return data;
         }
@@ -217,13 +218,13 @@ namespace Cosmos
             SN = 0;
             TS = 0;
             Cmd = KcpProtocol.NIL;
-            MsgID = 0;
+            OperationCode = 0;
             ServiceMsg = null;
             IsFull = false;
         }
         public override string ToString()
         {
-            string str = $"Length:{Length} ; Conv:{Conv} ; Snd_una:{Snd_una} ; Rcv_nxt:{Rcv_nxt} ; SN:{SN} ; TS :{TS } ;Cmd:{Cmd} ; MsgID : {MsgID} ; RecurCount:{RecurCount} ";
+            string str = $"Length:{Length} ; Conv:{Conv} ; Snd_una:{Snd_una} ; Rcv_nxt:{Rcv_nxt} ; SN:{SN} ; TS :{TS } ;Cmd:{Cmd} ; MsgID : {OperationCode} ; RecurCount:{RecurCount} ";
             return str;
         }
     }

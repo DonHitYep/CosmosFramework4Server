@@ -20,13 +20,15 @@ namespace CosmosFramework4Server
             Utility.Debug.LogInfo("Server Shuntdown !");//按控制台关闭按钮关闭 
             return false;
         }
+        static string ip = "127.0.0.1";
+        static int port = 8511;
         static void Main(string[] args)
         {
              SetConsoleCtrlHandler(newDelegate, true);
             GameManager.LogManager.SetHelper(new ConsoleLogHelper());
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
-            GameManager.NetworkManager.Connect(System.Net.Sockets.ProtocolType.Udp);
+            GameManager.NetworkManager.Connect("127.0.0.1",8511,System.Net.Sockets.ProtocolType.Udp);
             Task.Run(GameManagerAgent.Instance.OnRefresh);
             while (true){}
             Console.ReadLine();

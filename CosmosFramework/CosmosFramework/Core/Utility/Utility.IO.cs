@@ -7,9 +7,9 @@ namespace Cosmos
     {
         public static class IO
         {
-            static object locker = new object();
             public static void CreateFolder(string path)
             {
+
                 var dir = new DirectoryInfo(path);
                 if (!dir.Exists)
                 {
@@ -19,6 +19,7 @@ namespace Cosmos
             }
             public static void CreateFolder(string path, string folderName)
             {
+
                 var fullPath = CombineRelativePath(path, folderName);
                 var dir = new DirectoryInfo(fullPath);
                 if (!dir.Exists)
@@ -85,20 +86,19 @@ namespace Cosmos
             public static string ReadTextFileContent(string fullFilePath)
             {
                 if (!File.Exists(fullFilePath))
-                    throw new IOException("ReadTextFileContent path not exist !" + fullFilePath);
+                    Utility.Debug.LogError( new  IOException("ReadTextFileContent path not exist !" + fullFilePath));
                 Utility.Text.ClearStringBuilder();
-                lock (locker)
+
+                using (FileStream stream = File.Open(fullFilePath, FileMode.Open))
                 {
-                    using (FileStream stream = File.Open(fullFilePath, FileMode.Open))
+                    using (StreamReader reader = new StreamReader(stream))
                     {
-                        using (StreamReader reader = new StreamReader(stream))
-                        {
-                            Utility.Text.StringBuilderCache.Append(reader.ReadToEnd());
-                            reader.Close();
-                        }
+                        Utility.Text.StringBuilderCache.Append(reader.ReadToEnd());
+                        reader.Close();
+                        stream.Close();
                     }
-                    return Utility.Text.StringBuilderCache.ToString();
                 }
+                return Utility.Text.StringBuilderCache.ToString();
             }
             /// <summary>
             /// 读取指定路径下某text类型文件的内容
@@ -109,7 +109,7 @@ namespace Cosmos
             public static string ReadTextFileContent(string folderPath, string fileName)
             {
                 if (!Directory.Exists(folderPath))
-                    throw new IOException("ReadTextFileContent folder path not exist !" + folderPath);
+                    Utility.Debug.LogError(new IOException("ReadTextFileContent folder path not exist !" + folderPath));
                 return ReadTextFileContent(Utility.IO.CombineRelativeFilePath(fileName, folderPath));
             }
             /// <summary>
@@ -124,16 +124,14 @@ namespace Cosmos
                 string absoluteFullpath = Utility.IO.CombineRelativeFilePath(relativePath);
                 if (!Directory.Exists(absoluteFullpath))
                     Directory.CreateDirectory(absoluteFullpath);
-                lock (locker)
+                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, absoluteFullpath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
-                    using (FileStream stream = File.OpenWrite(Utility.IO.CombineRelativeFilePath(fileName, absoluteFullpath)))
+                    stream.Position = stream.Length;
+                    using (StreamWriter writer = new StreamWriter(stream))
                     {
-                        stream.Position = stream.Length;
-                        using (StreamWriter writer = new StreamWriter(stream))
-                        {
-                            writer.WriteLine(info);
-                            writer.Close();
-                        }
+                        writer.WriteLine(info);
+                        writer.Close();
+                        stream.Close();
                     }
                 }
             }

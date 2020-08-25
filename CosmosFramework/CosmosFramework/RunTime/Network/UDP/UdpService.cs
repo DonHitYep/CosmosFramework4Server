@@ -18,21 +18,24 @@ namespace Cosmos.Network
     /// </summary>
     public class UdpService : INetworkService, IControllable
     {
-        protected UdpClient udpSocket;
+        public bool IsPause { get; private set; }
         /// <summary>
         /// 对象IP
         /// </summary>
-        protected string ip = "127.0.0.1";
+        public string IP { get; set; }
         /// <summary>
         /// 对象端口
         /// </summary>
-        protected int port = 20771;
+        public int Port { get; set; }
+        /// <summary>
+        /// udpSocket对象
+        /// </summary>
+        protected UdpClient udpSocket;
         protected ConcurrentQueue<UdpReceiveResult> awaitHandle = new ConcurrentQueue<UdpReceiveResult>();
         protected uint conv = 0;
-        public bool IsPause { get; private set; }
         public virtual void OnInitialization()
         {
-            udpSocket = new UdpClient(port);
+            udpSocket = new UdpClient(Port);
             OnReceive();
         }
         /// <summary>
@@ -70,10 +73,15 @@ namespace Cosmos.Network
         /// 空虚函数;
         /// 发送报文信息
         /// </summary>
-        /// <param name="conv">会话ID</param>
-        /// <param name="data">数据报文</param>
+        /// <param name="netMsg">消息体</param>
+        public virtual void SendMessage(INetworkMessage netMsg) { }
+        /// <summary>
+        /// 空虚函数;
+        /// 发送报文信息
+        /// </summary>
+        /// <param name="netMsg">消息体</param>
         /// <param name="endPoint">远程对象</param>
-        public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint) { }
+        public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint){}
         /// <summary>
         /// 非空虚函数；
         /// 轮询更新;
@@ -81,5 +89,7 @@ namespace Cosmos.Network
         public virtual void OnRefresh() { }
         public void OnPause() { IsPause = true; }
         public void OnUnPause() { IsPause = false; }
+
+   
     }
 }
