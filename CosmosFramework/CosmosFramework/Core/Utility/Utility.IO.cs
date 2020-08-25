@@ -124,7 +124,7 @@ namespace Cosmos
                 string absoluteFullpath = Utility.IO.CombineRelativeFilePath(relativePath);
                 if (!Directory.Exists(absoluteFullpath))
                     Directory.CreateDirectory(absoluteFullpath);
-                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, absoluteFullpath), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, absoluteFullpath), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     stream.Position = stream.Length;
                     using (StreamWriter writer = new StreamWriter(stream))
