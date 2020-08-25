@@ -114,6 +114,7 @@ namespace Cosmos
             }
             /// <summary>
             /// 追加写入文件信息；
+            /// 若文件为空，则自动创建；
             /// 此方法为text类型文件写入；
             /// </summary>
             /// <param name="relativePath">相对路径</param>
