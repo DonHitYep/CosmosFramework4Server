@@ -8,7 +8,7 @@ namespace Cosmos
     /// Server端的模块
     /// </summary>
     /// <typeparam name="TDerived"></typeparam>
-    public class Module<TDerived> : ConcurrentSingleton<TDerived>, IModule
+    public abstract class Module<TDerived> : ConcurrentSingleton<TDerived>, IModule,IOperable
         where TDerived : Module<TDerived>, new()
     {
         #region properties
@@ -68,6 +68,8 @@ namespace Cosmos
         /// </summary>
         public virtual void OnTermination(){}
         public void OnUnPause(){IsPause = false;}
+        public virtual void OnActive(){}
+        public virtual void OnDeactive(){}
         #endregion
     }
 }

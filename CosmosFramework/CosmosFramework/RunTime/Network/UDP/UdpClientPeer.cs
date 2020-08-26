@@ -15,6 +15,9 @@ namespace Cosmos.Network
         /// 会话ID
         /// </summary>
         public uint Conv { get; private set; }
+        /// <summary>
+        /// 分配的endPoint
+        /// </summary>
         public IPEndPoint PeerEndPoint { get; private set; }
         /// <summary>
         /// 处理的message序号，按1累次递增。
@@ -53,12 +56,13 @@ namespace Cosmos.Network
             IsConnect = true;
         }
         /// <summary>
-        /// 发送消息给这个peerd的远程对象
+        /// 空虚函数
+        /// 发送消息给这个peer的远程对象
         /// </summary>
-        /// <param name="netMsg"></param>
+        /// <param name="netMsg">消息体</param>
         public virtual  void SendMessage(INetworkMessage netMsg)
         {
-
+            //service.SendMessage(ack);
         }
         public void SetPeerEndPoint(IPEndPoint endPoint)
         {
@@ -99,6 +103,7 @@ namespace Cosmos.Network
                         //发送后进行原始报文数据的处理
                         HandleMsgSN(netMsg);
                         Utility.Debug.LogInfo($"发送ACK报文，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
+                        NetworkEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
                     }
                     Utility.Debug.LogInfo($"当前消息缓存数量为:{ackMsgDict.Count} ; Peer conv : {Conv}");
                     break;

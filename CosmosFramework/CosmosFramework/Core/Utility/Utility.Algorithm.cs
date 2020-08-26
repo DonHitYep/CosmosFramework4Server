@@ -204,6 +204,18 @@ namespace Cosmos
                 int result = random.Next(minValue, maxValue);
                 return result;
             }
+            /// <summary>
+            /// 交换两个值
+            /// </summary>
+            /// <typeparam name="T">传入的对象类型</typeparam>
+            /// <param name="t1">第一个需要交换的值</param>
+            /// <param name="t2">第二个需要交换的值</param>
+            public static void Swap<T>(ref T t1, ref T t2)
+            {
+                T t3 = t1;
+                t1 = t2;
+                t2 = t3;
+            }
         }
     }
 }

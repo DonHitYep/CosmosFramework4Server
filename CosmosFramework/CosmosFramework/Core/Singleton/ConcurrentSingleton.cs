@@ -2,15 +2,17 @@
 namespace Cosmos
 {
     /// <summary>
-    /// 多线程单例基类，内部包含线程锁
+    /// 多线程单例基类，内部包含线程锁;
+    /// 可选实现IConstruction接口;
+    /// 若实现IConstruction，则对象被new完成后，自动调用OnConstruction方法；
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class ConcurrentSingleton<T> : IDisposable
-              where T : ConcurrentSingleton<T>, new()
+    /// <typeparam name="TDerived">继承自此单例的可构造类型</typeparam>
+    public abstract class ConcurrentSingleton<TDerived> : IDisposable
+              where TDerived : class, new()
     {
-        protected static T instance;
+        protected static TDerived instance;
         static readonly object locker = new object();
-        public static T Instance
+        public static TDerived Instance
         {
             get
             {
@@ -20,9 +22,9 @@ namespace Cosmos
                     {
                         if (instance == null)
                         {
-                            instance = new T();
-                            if (instance is IBehaviour)
-                                (instance as IBehaviour).OnInitialization();
+                            instance = new TDerived();
+                            if (instance is IConstruction)
+                                (instance as IConstruction).OnConstruction();
                         }
                     }
                 }
@@ -34,9 +36,7 @@ namespace Cosmos
         /// </summary>
         public virtual void Dispose()
         {
-            if (instance is IBehaviour)
-                (instance as IBehaviour).OnTermination();
-            instance = default(T);
+            instance = default(TDerived);
         }
     }
 }

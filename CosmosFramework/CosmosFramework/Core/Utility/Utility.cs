@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System;
 using System.Text;
 using System.Reflection;
-#if UNITY_EDITOR
-using Object = UnityEngine.Object;
-using UnityEngine;
-#endif
 namespace Cosmos
 {
     public static class MessageColor
@@ -59,7 +55,7 @@ namespace Cosmos
     /// <summary>
     /// 通用工具类：
     /// 数组工具，反射工具，文字工具，加密工具，
-    /// 数学工具，持久化数据工具，Debug工具，Editor工具等等
+    /// 数学工具，持久化数据工具，Debug工具
     /// </summary>
     public sealed partial class Utility
     {

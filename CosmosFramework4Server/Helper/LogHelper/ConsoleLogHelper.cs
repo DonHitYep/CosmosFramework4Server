@@ -26,7 +26,7 @@ namespace ProtocolCore
         public void Error(Exception exception, string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > Error : Exception Message : {exception.Message} \n Exception line : {exception.StackTrace}; Msg : {msg}; \n {st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > Error : Exception Message : {exception?.Message} \n Exception line : {exception?.StackTrace}; Msg : {msg}; \n {st}";
            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         public void Info(string msg)

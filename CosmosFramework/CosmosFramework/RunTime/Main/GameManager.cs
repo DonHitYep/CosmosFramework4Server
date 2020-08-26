@@ -3,6 +3,7 @@ using Cosmos.Network;
 using Cosmos.Polling;
 using Cosmos.Reference;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 
@@ -71,6 +72,7 @@ namespace Cosmos
                 return logManager ;
             }
         }
+        static ConcurrentDictionary<Type, IModule> extensionsModuleDict = new ConcurrentDictionary<Type, IModule>();
         #endregion
         #region Methods
         /// <summary>
@@ -96,6 +98,47 @@ namespace Cosmos
             if (IsPause)
                 return;
             refreshHandler?.Invoke();
+        }
+        /// <summary>
+        /// 获取外源模块；
+        /// 此类模块不由CF框架生成，由用户自定义
+        /// 需要从Module类派生;
+        /// 线程安全；
+        /// </summary>
+        /// <typeparam name="TModule">实现模块功能的类对象</typeparam>
+        /// <returns>获取的模块</returns>
+        public static TModule GetExtensionsModule<TModule>()
+            where TModule : Module<TModule>, new()
+        {
+            Type type = typeof(TModule);
+            IModule module = default;
+            var result= extensionsModuleDict.TryGetValue(type, out module);
+            if (!result)
+            {
+                module = new TModule();
+                extensionsModuleDict.TryAdd(type, module);
+                module.OnInitialization();
+                Utility.Debug.LogInfo($"生成新模块 , Module :{module.ToString()} ");
+            }
+            return module as TModule;
+
+        }
+        /// <summary>
+        /// 清理外源模块；
+        /// 此类模块不由CF框架生成，由用户自定义
+        /// 需要从Module类派生;
+        /// </summary>
+        /// <typeparam name="TModule"></typeparam>
+        public static void ClearExtensionsModule<TModule>()
+    where TModule : Module<TModule>, new()
+        {
+            Type type = typeof(TModule);
+            if (extensionsModuleDict.ContainsKey(type))
+            {
+                IModule removedModule;
+                extensionsModuleDict.TryRemove(type,out removedModule);
+                removedModule.OnTermination();
+            }
         }
         internal void ModuleInitialization(IModule module)
         {
