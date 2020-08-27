@@ -119,13 +119,17 @@ namespace Cosmos.Network
                         var ack = UdpNetworkMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
                         sendMessageHandler?.Invoke(netMsg);
-                        //发送后进行原始报文数据的处理
-                        HandleMsgSN(netMsg);
-                        Utility.Debug.LogInfo($"发送ACK报文，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
-                        if (netMsg.OperationCode == OperationCode._Heartbeat)
+                        if (netMsg.OperationCode == CosmosOperationCode._Heartbeat)
+                        {
                             Heartbeat.OnRenewal();
+                            Utility.Debug.LogInfo($"Conv : {Conv} ,接收到OpCode 心跳包");
+                        }
                         else
+                        {
+                            //发送后进行原始报文数据的处理
+                            HandleMsgSN(netMsg);
                             NetworkEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
+                        }
                     }
                     Utility.Debug.LogInfo($"当前消息缓存数量为:{ackMsgDict.Count} ; Peer conv : {Conv}");
                     break;

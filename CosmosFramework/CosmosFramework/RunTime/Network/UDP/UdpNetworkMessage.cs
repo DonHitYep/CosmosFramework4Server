@@ -234,9 +234,28 @@ namespace Cosmos
         }
         public static UdpNetworkMessage ConvertToACK(UdpNetworkMessage srcMsg)
         {
-            UdpNetworkMessage ack = new UdpNetworkMessage(srcMsg.Conv, srcMsg.Snd_una, srcMsg.SN, KcpProtocol.ACK, srcMsg.OperationCode);
+            UdpNetworkMessage ack = GameManager.ReferencePoolManager.Spawn<UdpNetworkMessage>();
+            ack.Conv = srcMsg.Conv;
+            ack.Snd_una = srcMsg.Snd_una;
+            ack.SN = srcMsg.SN;
+            ack.Cmd = KcpProtocol.ACK;
+            ack.OperationCode = srcMsg.OperationCode;
             ack.EncodeMessage();
             return ack;
+        }
+        /// <summary>
+        /// 生成心跳数据
+        /// </summary>
+        /// <param name="conv">会话ID</param>
+        /// <returns></returns>
+        public static UdpNetworkMessage HeartbeatMessage(uint conv)
+        {
+            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetworkMessage>();
+            udpNetMsg.Conv = conv;
+            udpNetMsg.Cmd = KcpProtocol.ACK;
+            udpNetMsg.Length = 0;
+            udpNetMsg.OperationCode = CosmosOperationCode._Heartbeat;
+            return udpNetMsg;
         }
     }
 }

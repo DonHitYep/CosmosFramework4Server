@@ -34,5 +34,6 @@ namespace Cosmos
         /// 失活时触发的委托；
         /// </summary>
         Action UnavailableHandler { get; set; }
+
     }
 }

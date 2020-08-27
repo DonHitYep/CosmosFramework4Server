@@ -56,13 +56,14 @@ namespace Cosmos
                 UnavailableHandler?.Invoke();
                 return;
             }
-            Utility.Debug.LogInfo($"心跳：Conv : {Conv} ; currentRecurCount : {currentRecurCount}");
+            Utility.Debug.LogInfo($"心跳检测：Conv : {Conv} ; currentRecurCount : {currentRecurCount}");
         }
         public void OnRenewal()
         {
             long now = Utility.Time.SecondNow();
             LatestHeartbeatTime = now + HeartbeatInterval;
             currentRecurCount = 0;
+            Utility.Debug.LogInfo($"接收到心跳：Conv : {Conv} ");
         }
         public void OnTermination()
         {
