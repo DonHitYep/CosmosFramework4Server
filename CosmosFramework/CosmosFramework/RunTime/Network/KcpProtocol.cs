@@ -83,19 +83,23 @@ namespace Cosmos
 		/// </summary>
 		public const byte NIL = 0;
 		/// <summary>
-		/// 同步标志
+		/// 同步标志；
+		/// 建立连接；
 		/// </summary>
 		public const byte SYN = 1;
 		/// <summary>
-		/// 确认标志
+		/// 确认标志；
+		/// 收发确认；
 		/// </summary>
 		public const byte ACK = 2;
 		/// <summary>
-		/// 结束标志
+		/// 结束标志；
+		/// 断线操作；
 		/// </summary>
 		public const byte FIN = 3;
 		/// <summary>
-		///  业务标志
+		///  业务标志；
+		///  业务数据；
 		/// </summary>
 		public const byte MSG = 4;
 	}

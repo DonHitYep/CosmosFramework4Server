@@ -74,20 +74,26 @@ namespace Cosmos
         /// </summary>
         byte[] Buffer { get; set; }
         /// <summary>
-        /// 消息报文构造
+        /// MSG报文构造
         /// </summary>
         /// <param name="conv">会话ID</param>
         /// <param name="sn">msg序号</param>
         /// <param name="cmd">协议ID</param>
+        /// <param name="opCode">操作码</param>
         /// <param name="message">消息内容</param>
-        public UdpNetworkMessage(uint conv, uint sn, byte cmd, byte[] message)
+        public UdpNetworkMessage(uint conv, uint sn, byte cmd, ushort opCode, byte[] message)
         {
-            Length = (ushort)message.Length;
+            if (message == null)
+                Length = 0;
+            else
+                Length = (ushort)message.Length;
             Conv = conv;
             SN = sn;
             Cmd = cmd;
             ServiceMsg = message;
             Rcv_nxt = sn;
+            Snd_nxt = SN + 1;
+            OperationCode = opCode;
         }
         /// <summary>
         /// ACK报文构造
@@ -96,16 +102,16 @@ namespace Cosmos
         /// <param name="snd_una">未确认的报文</param>
         /// <param name="sn">msgID</param>
         /// <param name="cmd">协议</param>
-        /// <param name="msgID">前后端消息ID</param>
-        public UdpNetworkMessage(uint conv, uint snd_una, uint sn, ushort cmd, ushort msgID)
+        /// <param name="opCode">前后端消息ID</param>
+        public UdpNetworkMessage(uint conv, uint snd_una, uint sn, ushort cmd, ushort opCode)
         {
             Conv = conv;
             Snd_una = snd_una;
             SN = sn;
             Rcv_nxt = SN;
-            Snd_nxt= SN+1;
+            Snd_nxt = SN + 1;
             Cmd = cmd;
-            OperationCode = msgID;
+            OperationCode = opCode;
         }
         public UdpNetworkMessage() { }
         public UdpNetworkMessage(byte[] buffer)
@@ -173,7 +179,7 @@ namespace Cosmos
             byte[] sn = BitConverter.GetBytes(SN);
             byte[] ts = BitConverter.GetBytes(TS);
             byte[] cmd = BitConverter.GetBytes(Cmd);
-            byte[] msgID = BitConverter.GetBytes(OperationCode);
+            byte[] opCode = BitConverter.GetBytes(OperationCode);
             Array.Copy(len, 0, data, 0, 2);
             Array.Copy(conv, 0, data, 2, 4);
             Array.Copy(snd_una, 0, data, 6, 4);
@@ -182,7 +188,7 @@ namespace Cosmos
             Array.Copy(sn, 0, data, 18, 4);
             Array.Copy(ts, 0, data, 22, 8);
             Array.Copy(cmd, 0, data, 30, 2);
-            Array.Copy(msgID, 0, data, 32, 2);
+            Array.Copy(opCode, 0, data, 32, 2);
             //如果不是ACK报文，则追加数据
             if (Cmd == KcpProtocol.MSG)
                 Array.Copy(ServiceMsg, 0, data, 34, ServiceMsg.Length);
@@ -192,22 +198,6 @@ namespace Cosmos
         public byte[] GetBuffer()
         {
             return EncodeMessage();
-        }
-        /// <summary>
-        /// 转换为ACK报文
-        /// </summary>
-        public  byte[] ConvertToACKBuffer()
-        {
-            Length = 0;
-            Cmd = KcpProtocol.ACK;
-            return EncodeMessage();
-        }
-        public UdpNetworkMessage ConvertToACKNetMsg()
-        {
-            Length = 0;
-            Cmd = KcpProtocol.ACK;
-            EncodeMessage();
-            return this;
         }
         public void Clear()
         {
@@ -226,6 +216,12 @@ namespace Cosmos
         {
             string str = $"Length:{Length} ; Conv:{Conv} ; Snd_una:{Snd_una} ; Rcv_nxt:{Rcv_nxt} ; SN:{SN} ; TS :{TS } ;Cmd:{Cmd} ; MsgID : {OperationCode} ; RecurCount:{RecurCount} ";
             return str;
+        }
+        public static UdpNetworkMessage ConvertToACK(UdpNetworkMessage srcMsg)
+        {
+            UdpNetworkMessage ack = new UdpNetworkMessage(srcMsg.Conv,srcMsg.Snd_una,srcMsg.SN,KcpProtocol.ACK,srcMsg.OperationCode);
+            ack.EncodeMessage();
+            return ack;
         }
     }
 }

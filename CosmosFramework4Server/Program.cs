@@ -24,16 +24,15 @@ namespace CosmosFramework4Server
         static int port = 8511;
         static void Main(string[] args)
         {
-             SetConsoleCtrlHandler(newDelegate, true);
+            SetConsoleCtrlHandler(newDelegate, true);
             GameManager.LogManager.SetHelper(new ConsoleLogHelper());
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
-            GameManager.NetworkManager.Connect(ip,port,System.Net.Sockets.ProtocolType.Udp);
+            GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
             GameManager.GetExtensionsModule<PeerManager>()?.OnInitialization();
             Task.Run(GameManagerAgent.Instance.OnRefresh);
-            while (true){}
-            Console.ReadLine();
-            //Task.Run(AsyncCoroutine.Instance.Start);
+            while (true) { }
+         //   Task.Run(AsyncCoroutine.Instance.Start);
         }
         /// <summary>
         /// 异步单线程协程测试函数
@@ -43,18 +42,21 @@ namespace CosmosFramework4Server
             Task.Run(AsyncCoroutine.Instance.Start);
             Console.WriteLine(DateTime.Now.Ticks / 10000);
             Console.WriteLine(Utility.Time.MillisecondNow());
-            AsyncCoroutine.Instance.WaitTimeAsyncCallback(1001, () => {
+            AsyncCoroutine.Instance.WaitTimeAsyncCallback(1001, () =>
+            {
                 Console.WriteLine("Callback01");
                 Task.Run(() => { AsyncCoroutine.Instance.WaitTimeAsyncCallback(2300, () => Console.WriteLine("Callback0233")); });
             });
             AsyncCoroutine.Instance.WaitTimeAsyncCallback(1500, () => Console.WriteLine("Callback02"));
             AsyncCoroutine.Instance.WaitTimeAsyncCallback(2000, () => Console.WriteLine("Callback03"));
-            AsyncCoroutine.Instance.WaitTimeAsyncCallback(3000, () => {
+            AsyncCoroutine.Instance.WaitTimeAsyncCallback(3000, () =>
+            {
                 Console.WriteLine("Callback04");
                 AsyncCoroutine.Instance.WaitTimeAsyncCallback(6000, () => Console.WriteLine("Callback05"));
             });
             Console.WriteLine(AsyncCoroutine.Instance.CorouCount);
-            AsyncCoroutine.Instance.WaitTimeAsyncCallback(15001, () => {
+            AsyncCoroutine.Instance.WaitTimeAsyncCallback(15001, () =>
+            {
                 Console.WriteLine("Callback06");
                 Console.WriteLine(AsyncCoroutine.Instance.CorouCount);
             });

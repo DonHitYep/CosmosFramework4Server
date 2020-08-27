@@ -14,7 +14,7 @@ namespace CosmosFramework4Server
         }
         void PeerHandler(INetworkMessage netMsg)
         {
-            Utility.Debug.LogWarning("PeerManager接收到 key 为 0  的网络广播事件"); ;
+            Utility.Debug.LogWarning("PeerManager接收到OperationCode  为 0  的网络广播事件"); ;
         }
     }
 }

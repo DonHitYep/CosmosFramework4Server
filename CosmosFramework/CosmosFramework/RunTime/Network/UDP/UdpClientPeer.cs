@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 namespace Cosmos.Network
 {
-    public class UdpClientPeer : IRemotePeer
+    public class UdpClientPeer : IRemotePeer, IRefreshable
     {
         /// <summary>
         /// 会话ID
@@ -30,9 +30,14 @@ namespace Cosmos.Network
         /// <summary>
         /// 当前Peer是否处于连接状态
         /// </summary>
-        public bool IsConnect { get; private set; }
+        public bool Available { get; private set; }
         /// <summary>
-        /// 最后一次更新时间
+        /// 心跳机制
+        /// </summary>
+        public IHeartbeat Heartbeat { get; private set; }
+        /// <summary>
+        /// 最后一次更新时间；
+        /// 更新的时间戳；
         /// </summary>
         protected long latestPollingTime;
         /// <summary>
@@ -40,41 +45,47 @@ namespace Cosmos.Network
         /// 整理错序报文；
         /// 临时起到ACK缓存的作用
         /// </summary>
-     protected   ConcurrentDictionary<uint, UdpNetworkMessage> ackMsgDict;
+        protected ConcurrentDictionary<uint, UdpNetworkMessage> ackMsgDict;
         /// <summary>
         /// 解析间隔
         /// </summary>
-        const int interval = 2000;
+        protected const int interval = 2000;
+        /// <summary>
+        /// 发送网络消息委托；
+        /// 这里函数指针指向service的sendMessage
+        /// </summary>
+        Action<INetworkMessage> sendMessageHandler;
         public UdpClientPeer()
         {
             ackMsgDict = new ConcurrentDictionary<uint, UdpNetworkMessage>();
-            latestPollingTime = Utility.Time.MillisecondNow() + interval;
         }
         public UdpClientPeer(uint conv) : this()
         {
             this.Conv = conv;
-            IsConnect = true;
         }
         /// <summary>
         /// 空虚函数
         /// 发送消息给这个peer的远程对象
         /// </summary>
         /// <param name="netMsg">消息体</param>
-        public virtual  void SendMessage(INetworkMessage netMsg)
+        public virtual void SendMessage(INetworkMessage netMsg)
         {
-            //service.SendMessage(ack);
+            sendMessageHandler?.Invoke(netMsg);
         }
-        public void SetPeerEndPoint(IPEndPoint endPoint)
+        public void SetValue(Action<INetworkMessage> sendMsgCallback, uint conv, IPEndPoint endPoint)
         {
+            this.Conv = conv;
             this.PeerEndPoint = endPoint;
             latestPollingTime = Utility.Time.MillisecondNow() + interval;
+            this.sendMessageHandler = sendMsgCallback;
+            Available = true;
         }
         /// <summary>
         /// 处理进入这个peer的消息
         /// </summary>
         /// <param name="service">udp服务</param>
         /// <param name="msg">消息体</param>
-        public virtual void MessageHandler(UdpServerService service, INetworkMessage msg)
+        public virtual void MessageHandler(INetworkMessage msg)
         {
             UdpNetworkMessage netMsg = msg as UdpNetworkMessage;
             switch (netMsg.Cmd)
@@ -85,7 +96,7 @@ namespace Cosmos.Network
                         UdpNetworkMessage tmpMsg;
                         if (ackMsgDict.TryRemove(netMsg.SN, out tmpMsg))
                         {
-                            Utility.Debug.LogInfo($"网络ACK消息 : Conv :{Conv}, ID : {tmpMsg.OperationCode}");
+                            Utility.Debug.LogInfo($" Conv :{Conv}，接收到ACK消息 ");
                         }
                         else
                         {
@@ -96,16 +107,37 @@ namespace Cosmos.Network
                     break;
                 case KcpProtocol.MSG:
                     {
+                        Utility.Debug.LogInfo($"Conv : {Conv} ,接收到MSG消息");
                         //生成一个ACK报文，并返回发送
-                        var ack = netMsg.ConvertToACKNetMsg();
+                        var ack = UdpNetworkMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
-                        service.SendMessage(ack);
+                        sendMessageHandler?.Invoke(netMsg);
                         //发送后进行原始报文数据的处理
                         HandleMsgSN(netMsg);
                         Utility.Debug.LogInfo($"发送ACK报文，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
-                        NetworkEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
+                        if (netMsg.OperationCode == OperationCode._Heartbeat)
+                            Heartbeat.OnRenewal();
+                        else
+                            NetworkEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
                     }
                     Utility.Debug.LogInfo($"当前消息缓存数量为:{ackMsgDict.Count} ; Peer conv : {Conv}");
+                    break;
+                case KcpProtocol.FIN:
+                    {
+                        //结束建立连接Cmd，这里需要谨慎考虑；
+                        Utility.Debug.LogWarning($"Conv : {Conv} ,接收到FIN消息");
+                        AbortConnection();
+                    }
+                    break;
+                case KcpProtocol.SYN:
+                    {
+                        //建立连接标志
+                        Utility.Debug.LogInfo($"Conv : {Conv} ,接收到SYN消息");
+                        //生成一个ACK报文，并返回发送
+                        var ack = UdpNetworkMessage.ConvertToACK(netMsg);
+                        //这里需要发送ACK报文
+                        sendMessageHandler?.Invoke(netMsg);
+                    }
                     break;
             }
         }
@@ -113,19 +145,20 @@ namespace Cosmos.Network
         /// 轮询更新，创建Peer对象时候将此方法加入监听；
         /// </summary>
         /// <param name="service">服务端的Peer</param>
-        public void OnPolling(UdpServerService service)
+        public void OnRefresh()
         {
             long now = Utility.Time.MillisecondNow();
             if (now <= latestPollingTime)
                 return;
             latestPollingTime = now + interval;
-            if (!IsConnect)
+            if (!Available)
                 return;
+            Heartbeat?.OnRefresh();
             foreach (var msg in ackMsgDict.Values)
             {
                 if (msg.RecurCount >= 30)
                 {
-                    IsConnect = false;
+                    Available = false;
                     Utility.Debug.LogInfo($"Peer Conv:{Conv } 失去连接");
                     return;
                 }
@@ -135,7 +168,7 @@ namespace Cosmos.Network
                     //重发次数+1
                     msg.RecurCount += 1;
                     //超时重发
-                    service.SendMessage(msg);
+                    sendMessageHandler?.Invoke(msg);
                 }
             }
         }
@@ -168,15 +201,29 @@ namespace Cosmos.Network
             }
             return result; ;
         }
-        public void Close()
+        /// <summary>
+        /// 终止连接
+        /// </summary>
+        public void AbortConnection()
         {
-            IsConnect = false;
+            Available = false;
+        }
+        public void Clear()
+        {
+            Available = false;
+            Conv = 0;
+            PeerEndPoint = null;
+            HandleSN = 0;
+            SendSN = 0;
+            latestPollingTime = 0;
+            sendMessageHandler = null;
+            ackMsgDict.Clear();
         }
         /// <summary>
         /// 处理报文序号
         /// </summary>
         /// <param name="netMsg">网络消息</param>
-       protected void HandleMsgSN(UdpNetworkMessage netMsg)
+        protected void HandleMsgSN(UdpNetworkMessage netMsg)
         {
             //sn小于当前处理HandleSN则表示已经处理过的消息；
             if (netMsg.SN <= HandleSN)
@@ -197,5 +244,6 @@ namespace Cosmos.Network
                 HandleMsgSN(nxtNetMsg);
             }
         }
+ 
     }
 }

@@ -3,6 +3,7 @@ using Cosmos.Reference;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
@@ -13,14 +14,25 @@ namespace Cosmos
     public class UdpServerService : UdpService
     {
         /// <summary>
+        /// 轮询委托
+        /// </summary>
+        Action refreshHandler;
+        /// <summary>
         /// 销毁一个peer事件处理者
         /// </summary>
         Action<uint> peerAbortHandler;
-        ConcurrentDictionary<uint, UdpClientPeer> clientDict = new ConcurrentDictionary<uint, UdpClientPeer>();
-        /// <summary>
-        /// 轮询委托
-        /// </summary>
-        Action<UdpServerService> pollingHandler;
+        ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
+        public event Action RefreshHandler
+        {
+            add
+            {
+                refreshHandler += value;
+            }
+            remove
+            {
+                refreshHandler -= value;
+            }
+        }
         public override void OnInitialization()
         {
             base.OnInitialization();
@@ -28,7 +40,7 @@ namespace Cosmos
         public override async void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint)
         {
             UdpClientPeer peer;
-            if (clientDict.TryGetValue(netMsg.Conv, out peer))
+            if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
             {
                 UdpNetworkMessage udpNetMsg = netMsg as UdpNetworkMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
@@ -54,10 +66,10 @@ namespace Cosmos
                 }
             }
         }
-        public override  async void SendMessage(INetworkMessage netMsg)
+        public override async void SendMessage(INetworkMessage netMsg)
         {
             UdpClientPeer peer;
-            if (clientDict.TryGetValue(netMsg.Conv, out peer))
+            if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
             {
                 UdpNetworkMessage udpNetMsg = netMsg as UdpNetworkMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
@@ -85,15 +97,16 @@ namespace Cosmos
         }
         public override void OnRefresh()
         {
-            pollingHandler?.Invoke(this);
+            refreshHandler?.Invoke();
             if (awaitHandle.Count > 0)
             {
                 UdpReceiveResult data;
                 if (awaitHandle.TryDequeue(out data))
                 {
-                    UdpNetworkMessage netMsg = ReferencePoolManager.Instance.Spawn<UdpNetworkMessage>();
+                    UdpNetworkMessage netMsg = GameManager.ReferencePoolManager.Spawn<UdpNetworkMessage>();
                     netMsg.CacheDecodeBuffer(data.Buffer);
-                    Utility.Debug.LogInfo($" 解码从客户端接收的报文：{netMsg.ToString()} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)}");
+                    if (netMsg.Cmd == KcpProtocol.MSG)
+                        Utility.Debug.LogInfo($" 解码从客户端接收的报文：{netMsg.ToString()} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)}");
                     if (netMsg.IsFull)
                     {
                         if (netMsg.Conv == 0)
@@ -104,38 +117,57 @@ namespace Cosmos
                             CreateClientPeer(netMsg, data.RemoteEndPoint, out peer);
                         }
                         UdpClientPeer tmpPeer;
-                        if (clientDict.TryGetValue(netMsg.Conv, out tmpPeer))
+                        if (clientPeerDict.TryGetValue(netMsg.Conv, out tmpPeer))
                         {
                             //如果peer失效，则移除
-                            if (!tmpPeer.IsConnect)
+                            if (!tmpPeer.Available)
                             {
-                                pollingHandler -= tmpPeer.OnPolling;
-                                UdpClientPeer abortPeer;
-                                clientDict.TryRemove(netMsg.Conv, out abortPeer);
-                                peerAbortHandler?.Invoke(abortPeer.Conv);
-                                Utility.Debug.LogInfo($"移除失效peer，conv{netMsg.Conv}:");
+                                refreshHandler -= tmpPeer.OnRefresh;
+                                UdpClientPeer abortedPeer;
+                                clientPeerDict.TryRemove(netMsg.Conv, out abortedPeer);
+                                peerAbortHandler?.Invoke(abortedPeer.Conv);
+                                GameManager.ReferencePoolManager.Despawn(abortedPeer);
+                                Utility.Debug.LogInfo($"移除失效的Peer，conv：{netMsg.Conv}:");
                             }
                             else
                             {
-                                tmpPeer.MessageHandler(this, netMsg);
+                                tmpPeer.MessageHandler(netMsg);
                             }
                         }
-                        ReferencePoolManager.Instance.Despawn(netMsg);
+                        GameManager.ReferencePoolManager.Despawn(netMsg);
                     }
                 }
+            }
+        }
+        /// <summary>
+        /// 移除失效peer
+        /// </summary>
+        /// <param name="conv">会话ID</param>
+        public void AbortUnavilablePeer(uint conv)
+        {
+            try
+            {
+                UdpClientPeer tmpPeer;
+                clientPeerDict.TryGetValue(conv, out tmpPeer);
+                peerAbortHandler?.Invoke(conv);
+                Utility.Debug.LogWarning($"心跳检测，移除失效peer , Conv :{ conv}");
+            }
+            catch (Exception e)
+            {
+                Utility.Debug.LogError($"心跳检测，移除失效peer失败", e);
             }
         }
         bool CreateClientPeer(UdpNetworkMessage udpNetMsg, IPEndPoint endPoint, out UdpClientPeer peer)
         {
             peer = default;
             bool result = false;
-            if (!clientDict.TryGetValue(udpNetMsg.Conv, out peer))
+            if (!clientPeerDict.TryGetValue(udpNetMsg.Conv, out peer))
             {
-                peer = new UdpClientPeer(udpNetMsg.Conv);
-                peer.SetPeerEndPoint(endPoint);
-                result = clientDict.TryAdd(udpNetMsg.Conv, peer);
-                pollingHandler += peer.OnPolling;
-                Utility.Debug.LogInfo($"CreateClientPeer  conv : {udpNetMsg.Conv}; PeerCount : {clientDict.Count}");
+                peer = GameManager.ReferencePoolManager.Spawn<UdpClientPeer>();
+                peer.SetValue(SendMessage, udpNetMsg.Conv, endPoint);
+                result = clientPeerDict.TryAdd(udpNetMsg.Conv, peer);
+                refreshHandler += peer.OnRefresh;
+                Utility.Debug.LogInfo($"Create ClientPeer  conv : {udpNetMsg.Conv}; PeerCount : {clientPeerDict.Count}");
             }
             return result;
         }

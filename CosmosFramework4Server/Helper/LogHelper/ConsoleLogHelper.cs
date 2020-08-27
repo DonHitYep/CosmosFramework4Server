@@ -21,12 +21,13 @@ namespace ProtocolCore
                 string str = info.Parent.Parent.Parent.FullName;
                 logPath = Utility.IO.CombineRelativePath(str, "ServerLog");
                 Utility.IO.CreateFolder(logPath);
+                System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
             }
         }
         public void Error(Exception exception, string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > Error : Exception Message : {exception?.Message} \n Exception line : {exception?.StackTrace}; Msg : {msg}; \n {st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > Error : Exception Message : {exception?.Message} ；Exception line : {exception?.StackTrace}; Msg : {msg}; \n {st}";
            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         public void Info(string msg)
@@ -40,6 +41,15 @@ namespace ProtocolCore
             StackTrace st = new StackTrace(new StackFrame(4, true));
             string str = $"{DateTime.Now.ToString()}[ - ] > Warring : {msg};\n {st}";
             Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
+        }
+        /// <summary>
+        /// 全局异常捕获器
+        /// </summary>
+        /// <param name="sender">异常抛出者</param>
+        /// <param name="e">未被捕获的异常</param>
+        static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
+        {
+            Utility.Debug.LogError(e);
         }
     }
 }

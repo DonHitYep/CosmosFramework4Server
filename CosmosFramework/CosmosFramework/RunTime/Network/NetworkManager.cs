@@ -99,5 +99,21 @@ namespace Cosmos.Network
                     break;
             }
         }
+        /// <summary>
+        /// 与远程建立连接；
+        /// </summary>
+        /// <param name="service">自定义实现的服务</param>
+        public void Connect(INetworkService service)
+        {
+            if (service == null)
+            {
+                Utility.Debug.LogError("Service Empty");
+                return;
+            }
+            OnUnPause();
+            this.service = service;
+            service.OnInitialization();
+            Utility.Debug.LogInfo("建立UDP远程连接");
+        }
     }
 }
