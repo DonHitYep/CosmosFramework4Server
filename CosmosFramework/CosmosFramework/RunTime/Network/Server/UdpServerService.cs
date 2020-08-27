@@ -17,22 +17,23 @@ namespace Cosmos
         /// 轮询委托
         /// </summary>
         Action refreshHandler;
+        public event Action RefreshHandler
+        {
+            add{refreshHandler += value;}
+            remove{refreshHandler -= value;}
+        }
         /// <summary>
         /// 销毁一个peer事件处理者
         /// </summary>
         Action<uint> peerAbortHandler;
-        ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
-        public event Action RefreshHandler
+        public event Action<uint> PeerAbortHandler
         {
-            add
-            {
-                refreshHandler += value;
-            }
-            remove
-            {
-                refreshHandler -= value;
-            }
+            add { peerAbortHandler += value; }
+            remove { peerAbortHandler -= value; }
         }
+
+        ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
+
         public override void OnInitialization()
         {
             base.OnInitialization();
@@ -140,17 +141,19 @@ namespace Cosmos
             }
         }
         /// <summary>
-        /// 移除失效peer
+        /// 移除失效peer；
+        /// 作为参数传入peer；
         /// </summary>
         /// <param name="conv">会话ID</param>
-        public void AbortUnavilablePeer(uint conv)
+        void AbortUnavilablePeer(uint conv)
         {
             try
             {
                 UdpClientPeer tmpPeer;
                 clientPeerDict.TryGetValue(conv, out tmpPeer);
                 peerAbortHandler?.Invoke(conv);
-                Utility.Debug.LogWarning($"心跳检测，移除失效peer , Conv :{ conv}");
+                Utility.Debug.LogWarning($"心跳检测， Conv :{ conv} 已经断线，对其进行移除操作 ");
+                GameManager.ReferencePoolManager.Despawn(tmpPeer);
             }
             catch (Exception e)
             {
@@ -164,7 +167,7 @@ namespace Cosmos
             if (!clientPeerDict.TryGetValue(udpNetMsg.Conv, out peer))
             {
                 peer = GameManager.ReferencePoolManager.Spawn<UdpClientPeer>();
-                peer.SetValue(SendMessage, udpNetMsg.Conv, endPoint);
+                peer.SetValue(SendMessage, AbortUnavilablePeer, udpNetMsg.Conv, endPoint);
                 result = clientPeerDict.TryAdd(udpNetMsg.Conv, peer);
                 refreshHandler += peer.OnRefresh;
                 Utility.Debug.LogInfo($"Create ClientPeer  conv : {udpNetMsg.Conv}; PeerCount : {clientPeerDict.Count}");

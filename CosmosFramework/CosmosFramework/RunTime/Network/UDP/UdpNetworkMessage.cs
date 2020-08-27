@@ -74,6 +74,21 @@ namespace Cosmos
         /// </summary>
         byte[] Buffer { get; set; }
         /// <summary>
+        /// 默认构造
+        /// </summary>
+        public UdpNetworkMessage() { }
+        /// <summary>
+        /// 用于验证的消息构造
+        /// </summary>
+        /// <param name="conv">会话ID</param>
+        /// <param name="cmd">协议ID</param>
+        public UdpNetworkMessage(uint conv, byte cmd)
+        {
+            Length = 0;
+            Conv = conv;
+            Cmd = cmd;
+        }
+        /// <summary>
         /// MSG报文构造
         /// </summary>
         /// <param name="conv">会话ID</param>
@@ -113,7 +128,6 @@ namespace Cosmos
             Cmd = cmd;
             OperationCode = opCode;
         }
-        public UdpNetworkMessage() { }
         public UdpNetworkMessage(byte[] buffer)
         {
             Buffer = buffer;
@@ -160,6 +174,7 @@ namespace Cosmos
             {
                 ServiceMsg = new byte[Length];
                 Array.Copy(buffer, 34, ServiceMsg, 0, Length);
+                Utility.Debug.LogInfo($" Conv : {Conv} ,Msg : {Utility.Converter.GetString(ServiceMsg)}");
             }
         }
         /// <summary>
@@ -219,7 +234,7 @@ namespace Cosmos
         }
         public static UdpNetworkMessage ConvertToACK(UdpNetworkMessage srcMsg)
         {
-            UdpNetworkMessage ack = new UdpNetworkMessage(srcMsg.Conv,srcMsg.Snd_una,srcMsg.SN,KcpProtocol.ACK,srcMsg.OperationCode);
+            UdpNetworkMessage ack = new UdpNetworkMessage(srcMsg.Conv, srcMsg.Snd_una, srcMsg.SN, KcpProtocol.ACK, srcMsg.OperationCode);
             ack.EncodeMessage();
             return ack;
         }

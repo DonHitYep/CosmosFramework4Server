@@ -11,6 +11,7 @@ namespace Cosmos
     /// </summary>
     public interface IHeartbeat : IRefreshable, IRenewable, IBehaviour, IReference
     {
+        uint Conv { get; set; }
         /// <summary>
         /// 秒级别；
         /// 1代表1秒；

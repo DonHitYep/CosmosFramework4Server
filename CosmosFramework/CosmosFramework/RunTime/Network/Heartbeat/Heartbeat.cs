@@ -8,11 +8,12 @@ namespace Cosmos
 {
     public class Heartbeat : IHeartbeat
     {
+        public uint Conv { get; set; }
         /// <summary>
         /// 秒级别；
         /// 1代表1秒；
         /// </summary>
-        public uint HeartbeatInterval { get; set; }
+        public uint HeartbeatInterval { get; set; } = 5;
         /// <summary>
         /// 秒级别；
         /// 上一次心跳时间；
@@ -25,7 +26,7 @@ namespace Cosmos
         /// <summary>
         /// 最大失效次数
         /// </summary>
-        public byte MaxRecurCount { get; set; }
+        public byte MaxRecurCount { get; set; } = 5;
         /// <summary>
         /// 失活时触发的委托；
         /// </summary>
@@ -38,6 +39,7 @@ namespace Cosmos
         {
             LatestHeartbeatTime = Utility.Time.SecondNow() + HeartbeatInterval;
             currentRecurCount = 0;
+            Available = true;
         }
         public void OnRefresh()
         {
@@ -52,7 +54,9 @@ namespace Cosmos
             {
                 Available = false;
                 UnavailableHandler?.Invoke();
+                return;
             }
+            Utility.Debug.LogInfo($"心跳：Conv : {Conv} ; currentRecurCount : {currentRecurCount}");
         }
         public void OnRenewal()
         {
@@ -66,6 +70,7 @@ namespace Cosmos
             HeartbeatInterval = 0;
             LatestHeartbeatTime = 0;
             Available = false;
+            UnavailableHandler = null;
         }
         public void Clear()
         {

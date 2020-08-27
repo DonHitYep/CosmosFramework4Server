@@ -55,9 +55,12 @@ namespace Cosmos.Network
         /// 这里函数指针指向service的sendMessage
         /// </summary>
         Action<INetworkMessage> sendMessageHandler;
+        Action<uint> abortPeerHandler;
         public UdpClientPeer()
         {
             ackMsgDict = new ConcurrentDictionary<uint, UdpNetworkMessage>();
+            //TODO Heartbeat 需要能够自定义传入，可扩展；
+            Heartbeat = new Heartbeat();
         }
         public UdpClientPeer(uint conv) : this()
         {
@@ -72,12 +75,16 @@ namespace Cosmos.Network
         {
             sendMessageHandler?.Invoke(netMsg);
         }
-        public void SetValue(Action<INetworkMessage> sendMsgCallback, uint conv, IPEndPoint endPoint)
+        public void SetValue(Action<INetworkMessage> sendMsgCallback, Action<uint> abortPeerCallback,uint conv, IPEndPoint endPoint)
         {
             this.Conv = conv;
             this.PeerEndPoint = endPoint;
             latestPollingTime = Utility.Time.MillisecondNow() + interval;
             this.sendMessageHandler = sendMsgCallback;
+            this.abortPeerHandler = abortPeerCallback;
+            Heartbeat.Conv = conv;
+            Heartbeat.OnInitialization();
+            Heartbeat.UnavailableHandler = AbortConnection;
             Available = true;
         }
         /// <summary>
@@ -122,13 +129,6 @@ namespace Cosmos.Network
                     }
                     Utility.Debug.LogInfo($"当前消息缓存数量为:{ackMsgDict.Count} ; Peer conv : {Conv}");
                     break;
-                case KcpProtocol.FIN:
-                    {
-                        //结束建立连接Cmd，这里需要谨慎考虑；
-                        Utility.Debug.LogWarning($"Conv : {Conv} ,接收到FIN消息");
-                        AbortConnection();
-                    }
-                    break;
                 case KcpProtocol.SYN:
                     {
                         //建立连接标志
@@ -139,7 +139,15 @@ namespace Cosmos.Network
                         sendMessageHandler?.Invoke(netMsg);
                     }
                     break;
+                case KcpProtocol.FIN:
+                    {
+                        //结束建立连接Cmd，这里需要谨慎考虑；
+                        Utility.Debug.LogWarning($"Conv : {Conv} ,接收到FIN消息");
+                        AbortConnection();
+                    }
+                    break;
             }
+            GameManager.ReferencePoolManager.Despawn(netMsg);
         }
         /// <summary>
         /// 轮询更新，创建Peer对象时候将此方法加入监听；
@@ -207,6 +215,7 @@ namespace Cosmos.Network
         public void AbortConnection()
         {
             Available = false;
+            abortPeerHandler?.Invoke(Conv);
         }
         public void Clear()
         {
@@ -218,6 +227,8 @@ namespace Cosmos.Network
             latestPollingTime = 0;
             sendMessageHandler = null;
             ackMsgDict.Clear();
+            Heartbeat.OnTermination();
+            abortPeerHandler = null;
         }
         /// <summary>
         /// 处理报文序号
