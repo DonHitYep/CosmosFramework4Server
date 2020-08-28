@@ -83,7 +83,7 @@ namespace Cosmos.Network
             this.sendMessageHandler = sendMsgCallback;
             this.abortPeerHandler = abortPeerCallback;
             Heartbeat.Conv = conv;
-            Heartbeat.OnInitialization();
+            Heartbeat.OnActive();
             Heartbeat.UnavailableHandler = AbortConnection;
             Available = true;
         }
@@ -118,11 +118,11 @@ namespace Cosmos.Network
                         //生成一个ACK报文，并返回发送
                         var ack = UdpNetworkMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
-                        sendMessageHandler?.Invoke(netMsg);
-                        if (netMsg.OperationCode == CosmosOperationCode._Heartbeat)
+                        sendMessageHandler?.Invoke(ack);
+                        if (netMsg.OperationCode == NetworkOpCode._Heartbeat)
                         {
                             Heartbeat.OnRenewal();
-                            Utility.Debug.LogInfo($"Conv : {Conv} ,接收到OpCode 心跳包");
+                            Utility.Debug.LogInfo($"Conv : {Conv} ,接收到心跳包，发送心跳包ACK");
                         }
                         else
                         {
@@ -131,7 +131,7 @@ namespace Cosmos.Network
                             NetworkEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
                         }
                     }
-                    Utility.Debug.LogInfo($"当前消息缓存数量为:{ackMsgDict.Count} ; Peer conv : {Conv}");
+                    //Utility.Debug.LogInfo($"当前消息缓存数量为:{ackMsgDict.Count} ; Peer conv : {Conv}");
                     break;
                 case KcpProtocol.SYN:
                     {
@@ -140,7 +140,7 @@ namespace Cosmos.Network
                         //生成一个ACK报文，并返回发送
                         var ack = UdpNetworkMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
-                        sendMessageHandler?.Invoke(netMsg);
+                        sendMessageHandler?.Invoke(ack);
                     }
                     break;
                 case KcpProtocol.FIN:
@@ -231,7 +231,7 @@ namespace Cosmos.Network
             latestPollingTime = 0;
             sendMessageHandler = null;
             ackMsgDict.Clear();
-            Heartbeat.OnTermination();
+            Heartbeat.Clear();
             abortPeerHandler = null;
         }
         /// <summary>

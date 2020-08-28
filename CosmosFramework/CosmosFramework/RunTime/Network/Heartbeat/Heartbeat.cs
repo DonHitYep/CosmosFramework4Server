@@ -35,7 +35,7 @@ namespace Cosmos
         /// 当前心跳次数
         /// </summary>
         byte currentRecurCount;
-        public void OnInitialization()
+        public void OnActive()
         {
             LatestHeartbeatTime = Utility.Time.SecondNow() + HeartbeatInterval;
             currentRecurCount = 0;
@@ -56,7 +56,7 @@ namespace Cosmos
                 UnavailableHandler?.Invoke();
                 return;
             }
-            Utility.Debug.LogInfo($"心跳检测：Conv : {Conv} ; currentRecurCount : {currentRecurCount}");
+            Utility.Debug.LogInfo($"心跳检测：Conv : {Conv} ; 心跳重发次数  : {currentRecurCount}");
         }
         public void OnRenewal()
         {
@@ -65,17 +65,17 @@ namespace Cosmos
             currentRecurCount = 0;
             Utility.Debug.LogInfo($"接收到心跳：Conv : {Conv} ");
         }
-        public void OnTermination()
+        public void OnDeactive()
         {
             currentRecurCount = 0;
-            HeartbeatInterval = 0;
             LatestHeartbeatTime = 0;
             Available = false;
             UnavailableHandler = null;
         }
         public void Clear()
         {
-            OnTermination();
+            OnDeactive();
+            UnavailableHandler = null;
         }
     }
 }
