@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 namespace Cosmos
@@ -104,6 +105,21 @@ namespace Cosmos
             public static object GetTypeInstance<T>(string fullName)
             {
                 return typeof(T).Assembly.CreateInstance(fullName);
+            }
+            /// <summary>
+            /// 获取变量的名称；
+            /// 参考：
+            /// object dotNet=new object();
+            /// Utility.Assembly.GetValueTypeName(() =>dotNet);
+            /// 输出得 dotNet
+            /// </summary>
+            /// <typeparam name="T">任意类型的变量</typeparam>
+            /// <param name="memberExperssion">变量的表达式</param>
+            /// <returns>传入变量的名称</returns>
+            public static string GetGetPropertyNameName<T>(Expression<Func<T>> memberExperssion)
+            {
+                MemberExpression me = (MemberExpression)memberExperssion.Body;
+                return me.Member.Name;
             }
         }
     }
