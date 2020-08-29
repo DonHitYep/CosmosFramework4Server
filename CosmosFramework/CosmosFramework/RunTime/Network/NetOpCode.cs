@@ -6,12 +6,15 @@ namespace Cosmos
 {
     /// <summary>
     /// 框架预留操作码；
-    /// 0~150预留给框架，剩下的码皆可自定义
+    /// 0~150预留给框架;
+    /// 其中0~50给服务器，51~100客户端，101~150前后端通用
     /// </summary>
-    public  class NetOpCode
+    public class NetOpCode
     {
         public static readonly ushort _PeerConnect= 1;
         public static readonly ushort _PeerDisconnect= 2;
+
+
         public static readonly ushort _Heartbeat= 101;
     }
 }
