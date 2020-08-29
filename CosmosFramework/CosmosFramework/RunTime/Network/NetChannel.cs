@@ -11,7 +11,7 @@ namespace Cosmos
     /// <summary>
     /// 通信协议基类
     /// </summary>
-    public abstract class NetworkChannel:IBehaviour,IRefreshable
+    public abstract class NetChannel:IBehaviour,IRefreshable
     {
         #region Properties
         //TODO NetworkChannel
@@ -33,15 +33,15 @@ namespace Cosmos
         /// <summary>
         /// 通道建立连接事件
         /// </summary>
-        public Action<NetworkChannel,object> NetworkChannelOnConnected { get; set; }
+        public Action<NetChannel,object> NetworkChannelOnConnected { get; set; }
         /// <summary>
         /// 通道接收消息事件
         /// </summary>
-        public Action<NetworkChannel,INetworkMessage> NetworkChannelOnReceive { get; set; }
+        public Action<NetChannel,INetMessage> NetworkChannelOnReceive { get; set; }
         /// <summary>
         /// 通道关闭事件
         /// </summary>
-        public Action<NetworkChannel> NetworkChannelOnClose { get; set; }
+        public Action<NetChannel> NetworkChannelOnClose { get; set; }
         ///// <summary>
         ///// 通道丢失心跳事件
         ///// </summary>
@@ -149,13 +149,13 @@ namespace Cosmos
         /// </summary>
         /// <param name="message">消息体</param>
         /// <returns>编码后的消息数组</returns>
-        public abstract byte[] EncodingMessage(INetworkMessage message);
+        public abstract byte[] EncodingMessage(INetMessage message);
         /// <summary>
         /// 接收网络消息，并对消息进行解码
         /// </summary>
         /// <param name="client">连接的客户端</param>
         /// <returns>解码后的消息对象</returns>
-        public abstract INetworkMessage ReceiveMessage(Socket client);
+        public abstract INetMessage ReceiveMessage(Socket client);
         /// <summary>
         /// 轮询事件发送网络消息
         /// </summary>

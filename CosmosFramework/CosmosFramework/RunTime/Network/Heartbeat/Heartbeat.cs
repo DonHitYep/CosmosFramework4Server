@@ -13,7 +13,7 @@ namespace Cosmos
         /// 秒级别；
         /// 1代表1秒；
         /// </summary>
-        public uint HeartbeatInterval { get; set; } = 5;
+        public uint HeartbeatInterval { get; set; } = 45;
         /// <summary>
         /// 秒级别；
         /// 上一次心跳时间；
@@ -56,14 +56,14 @@ namespace Cosmos
                 UnavailableHandler?.Invoke();
                 return;
             }
-            Utility.Debug.LogInfo($"心跳检测：Conv : {Conv} ; 心跳重发次数  : {currentRecurCount}");
+            Utility.Debug.LogInfo($"Heartbeat check ：Conv : {Conv} ; currentRecurCount  : {currentRecurCount}");
         }
         public void OnRenewal()
         {
             long now = Utility.Time.SecondNow();
             LatestHeartbeatTime = now + HeartbeatInterval;
             currentRecurCount = 0;
-            Utility.Debug.LogInfo($"接收到心跳：Conv : {Conv} ");
+            Utility.Debug.LogInfo($"Heartbeat receive ：Conv : {Conv} ");
         }
         public void OnDeactive()
         {

@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace Cosmos
 {
-    public class TcpChannel : NetworkChannel
+    public class TcpChannel : NetChannel
     {
         public override ProtocolType Protocol { get { return ProtocolType.Tcp; } }
         public override SocketType SocketType { get { return SocketType.Stream; } }
         public override bool IsNeedConnect { get { return true; } }
-        public override INetworkMessage ReceiveMessage(Socket client)
+        public override INetMessage ReceiveMessage(Socket client)
         {
             throw new NotImplementedException();
         }
-        public override byte[] EncodingMessage(INetworkMessage message)
+        public override byte[] EncodingMessage(INetMessage message)
         {
             throw new NotImplementedException();
         }

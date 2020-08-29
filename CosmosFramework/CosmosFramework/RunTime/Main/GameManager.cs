@@ -118,7 +118,7 @@ namespace Cosmos
                 module = new TModule();
                 extensionsModuleDict.TryAdd(type, module);
                 module.OnInitialization();
-                Utility.Debug.LogInfo($"生成新模块 , Module :{module.ToString()} ");
+                Utility.Debug.LogInfo($"Create new module  , Module :{module.ToString()} ");
             }
             return module as TModule;
 

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 namespace Cosmos
 {
-    public class UdpNetworkMessage : INetworkMessage, IReference
+    public class UdpNetMessage : INetMessage, IReference
     {
         /// <summary>
         /// 消息包体大小；
@@ -75,13 +75,13 @@ namespace Cosmos
         /// <summary>
         /// 默认构造
         /// </summary>
-        public UdpNetworkMessage() { }
+        public UdpNetMessage() { }
         /// <summary>
         /// 用于验证的消息构造
         /// </summary>
         /// <param name="conv">会话ID</param>
         /// <param name="cmd">协议ID</param>
-        public UdpNetworkMessage(uint conv, byte cmd)
+        public UdpNetMessage(uint conv, byte cmd)
         {
             Length = 0;
             Conv = conv;
@@ -95,7 +95,7 @@ namespace Cosmos
         /// <param name="cmd">协议ID</param>
         /// <param name="opCode">操作码</param>
         /// <param name="message">消息内容</param>
-        public UdpNetworkMessage(uint conv, uint sn, byte cmd, ushort opCode, byte[] message)
+        public UdpNetMessage(uint conv, uint sn, byte cmd, ushort opCode, byte[] message)
         {
             if (message == null)
                 Length = 0;
@@ -117,7 +117,7 @@ namespace Cosmos
         /// <param name="sn">msgID</param>
         /// <param name="cmd">协议</param>
         /// <param name="opCode">前后端消息ID</param>
-        public UdpNetworkMessage(uint conv, uint snd_una, uint sn, ushort cmd, ushort opCode)
+        public UdpNetMessage(uint conv, uint snd_una, uint sn, ushort cmd, ushort opCode)
         {
             Conv = conv;
             Snd_una = snd_una;
@@ -127,7 +127,7 @@ namespace Cosmos
             Cmd = cmd;
             OperationCode = opCode;
         }
-        public UdpNetworkMessage(byte[] buffer)
+        public UdpNetMessage(byte[] buffer)
         {
             Buffer = buffer;
             DecodeMessage(Buffer);
@@ -232,9 +232,9 @@ namespace Cosmos
             string str = $"Length:{Length} ; Conv:{Conv} ;Cmd:{Cmd};TS :{TS } ;  SN:{SN} ; Snd_una:{Snd_una} ; Rcv_nxt:{Rcv_nxt} ; OperationCode : {OperationCode} ; RecurCount:{RecurCount} ";
             return str;
         }
-        public static UdpNetworkMessage ConvertToACK(UdpNetworkMessage srcMsg)
+        public static UdpNetMessage ConvertToACK(UdpNetMessage srcMsg)
         {
-            UdpNetworkMessage ack = GameManager.ReferencePoolManager.Spawn<UdpNetworkMessage>();
+            UdpNetMessage ack = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
             ack.Conv = srcMsg.Conv;
             ack.Snd_una = srcMsg.Snd_una;
             ack.SN = srcMsg.SN;
@@ -248,14 +248,31 @@ namespace Cosmos
         /// </summary>
         /// <param name="conv">会话ID</param>
         /// <returns></returns>
-        public static UdpNetworkMessage HeartbeatMessage(uint conv)
+        public static UdpNetMessage HeartbeatMessage(uint conv)
         {
-            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetworkMessage>();
+            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.ACK;
             udpNetMsg.Length = 0;
-            udpNetMsg.OperationCode = NetworkOpCode._Heartbeat;
+            udpNetMsg.OperationCode = NetOpCode._Heartbeat;
             return udpNetMsg;
+        }
+        public static UdpNetMessage DefaultMessageAsync(uint conv)
+        {
+            var reuslut = DefaultMessage(conv);
+            return reuslut.Result;
+        }
+        static async Task<UdpNetMessage> DefaultMessage(uint conv)
+        {
+            return await Task.Run(() =>
+           {
+               var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+               udpNetMsg.Conv = conv;
+               udpNetMsg.Cmd = KcpProtocol.MSG;
+               udpNetMsg.Length = 0;
+               udpNetMsg.OperationCode = 0;
+               return udpNetMsg;
+           });
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Cosmos
         /// 对当前的peer对象发送消息
         /// </summary>
         /// <param name="netMsg">消息体</param>
-        void SendMessage(INetworkMessage netMsg);
+        void SendMessage(INetMessage netMsg);
         /// <summary>
         /// 接收网络消息；
         /// </summary>

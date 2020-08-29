@@ -16,7 +16,7 @@ namespace Cosmos.Network
     /// UDP socket服务；
     /// 这里管理其他接入的远程对象；
     /// </summary>
-    public class UdpService : INetworkService, IControllable
+    public class UdpService : INetService, IControllable
     {
         public bool IsPause { get; private set; }
         /// <summary>
@@ -65,7 +65,7 @@ namespace Cosmos.Network
                 }
                 catch (Exception e)
                 {
-                    Utility.Debug.LogError($"网络消息接收异常：{e}");
+                    Utility.Debug.LogError($"Receive net message exception ：{e}");
                 }
             }
         }
@@ -74,14 +74,14 @@ namespace Cosmos.Network
         /// 发送报文信息
         /// </summary>
         /// <param name="netMsg">消息体</param>
-        public virtual void SendMessage(INetworkMessage netMsg) { }
+        public virtual void SendMessageAsync(INetMessage netMsg) { }
         /// <summary>
         /// 空虚函数;
         /// 发送报文信息
         /// </summary>
         /// <param name="netMsg">消息体</param>
         /// <param name="endPoint">远程对象</param>
-        public virtual void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint){}
+        public virtual void SendMessageAsync(INetMessage netMsg, IPEndPoint endPoint) { }
         /// <summary>
         /// 非空虚函数；
         /// 轮询更新;
@@ -90,6 +90,6 @@ namespace Cosmos.Network
         public void OnPause() { IsPause = true; }
         public void OnUnPause() { IsPause = false; }
 
-   
+
     }
 }

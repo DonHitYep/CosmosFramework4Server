@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 
 namespace Cosmos
 {
-    public class UdpChannel : NetworkChannel
+    public class UdpChannel : NetChannel
     {
         public override ProtocolType Protocol { get { return ProtocolType.Udp; } }
         public override SocketType SocketType { get { return SocketType.Dgram; } }
         public override bool IsNeedConnect { get { return false; } }
-        public override byte[] EncodingMessage(INetworkMessage message)
+        public override byte[] EncodingMessage(INetMessage message)
         {
-            UdpNetworkMessage udpNetMsg = message as UdpNetworkMessage;
+            UdpNetMessage udpNetMsg = message as UdpNetMessage;
             return udpNetMsg.EncodeMessage();
         }
-        public override INetworkMessage ReceiveMessage(Socket client)
+        public override INetMessage ReceiveMessage(Socket client)
         {
             try
             {

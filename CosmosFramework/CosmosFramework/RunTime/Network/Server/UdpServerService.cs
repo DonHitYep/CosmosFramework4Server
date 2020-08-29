@@ -19,8 +19,8 @@ namespace Cosmos
         Action refreshHandler;
         public event Action RefreshHandler
         {
-            add{refreshHandler += value;}
-            remove{refreshHandler -= value;}
+            add { refreshHandler += value; }
+            remove { refreshHandler -= value; }
         }
         /// <summary>
         /// 销毁一个peer事件处理者
@@ -31,19 +31,17 @@ namespace Cosmos
             add { peerAbortHandler += value; }
             remove { peerAbortHandler -= value; }
         }
-
         ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
-
         public override void OnInitialization()
         {
             base.OnInitialization();
         }
-        public override async void SendMessage(INetworkMessage netMsg, IPEndPoint endPoint)
+        public override async void SendMessageAsync(INetMessage netMsg, IPEndPoint endPoint)
         {
             UdpClientPeer peer;
             if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
             {
-                UdpNetworkMessage udpNetMsg = netMsg as UdpNetworkMessage;
+                UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
                 if (result)
                 {
@@ -56,23 +54,23 @@ namespace Cosmos
                             if (length != buffer.Length)
                             {
                                 //消息未完全发送，则重新发送
-                                SendMessage(udpNetMsg, endPoint);
+                                SendMessageAsync(udpNetMsg, endPoint);
                             }
                         }
                         catch (Exception e)
                         {
-                            Utility.Debug.LogError($"发送异常:{e.Message}");
+                            Utility.Debug.LogError($"Send net message exceotion :{e.Message}");
                         }
                     }
                 }
             }
         }
-        public override async void SendMessage(INetworkMessage netMsg)
+        public override async void SendMessageAsync(INetMessage netMsg)
         {
             UdpClientPeer peer;
             if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
             {
-                UdpNetworkMessage udpNetMsg = netMsg as UdpNetworkMessage;
+                UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
                 if (result)
                 {
@@ -85,12 +83,12 @@ namespace Cosmos
                             if (length != buffer.Length)
                             {
                                 //消息未完全发送，则重新发送
-                                SendMessage(udpNetMsg);
+                                SendMessageAsync(udpNetMsg);
                             }
                         }
                         catch (Exception e)
                         {
-                            Utility.Debug.LogError($"发送异常:{e.Message}");
+                            Utility.Debug.LogError($"Send net message exceotion : {e.Message}");
                         }
                     }
                 }
@@ -104,10 +102,10 @@ namespace Cosmos
                 UdpReceiveResult data;
                 if (awaitHandle.TryDequeue(out data))
                 {
-                    UdpNetworkMessage netMsg = GameManager.ReferencePoolManager.Spawn<UdpNetworkMessage>();
+                    UdpNetMessage netMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
                     netMsg.CacheDecodeBuffer(data.Buffer);
                     if (netMsg.Cmd == KcpProtocol.MSG)
-                        Utility.Debug.LogInfo($" 解码从客户端接收的报文：{netMsg.ToString()} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)}");
+                        Utility.Debug.LogInfo($" Decode net message：{netMsg.ToString()} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)}");
                     if (netMsg.IsFull)
                     {
                         if (netMsg.Conv == 0)
@@ -127,16 +125,48 @@ namespace Cosmos
                                 UdpClientPeer abortedPeer;
                                 clientPeerDict.TryRemove(netMsg.Conv, out abortedPeer);
                                 peerAbortHandler?.Invoke(abortedPeer.Conv);
+                                NetPeerEventCore.Instance.Dispatch(NetOpCode._PeerDisconnect, tmpPeer);
                                 GameManager.ReferencePoolManager.Despawn(abortedPeer);
-                                Utility.Debug.LogInfo($"移除失效的Peer，conv：{netMsg.Conv}:");
+                                Utility.Debug.LogInfo($"Abort  Unavailable Peer，conv：{netMsg.Conv}:");
                             }
                             else
                             {
                                 tmpPeer.MessageHandler(netMsg);
                             }
                         }
+                        else
+                        {
+                            //发送终结命令；
+                            UdpNetMessage finMsg = UdpNetMessage.DefaultMessageAsync(netMsg.Conv);
+                            finMsg.Cmd = KcpProtocol.FIN;
+                            SendFINMessageAsync(finMsg, data.RemoteEndPoint);
+                        }
                         GameManager.ReferencePoolManager.Despawn(netMsg);
                     }
+                }
+            }
+        }
+        async void SendFINMessageAsync(INetMessage netMsg, IPEndPoint endPoint)
+        {
+
+            UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
+            udpNetMsg.TS = Utility.Time.MillisecondTimeStamp();
+            udpNetMsg.EncodeMessage();
+            if (udpSocket != null)
+            {
+                try
+                {
+                    var buffer = udpNetMsg.GetBuffer();
+                    int length = await udpSocket.SendAsync(buffer, buffer.Length, endPoint);
+                    if (length != buffer.Length)
+                    {
+                        //消息未完全发送，则重新发送
+                        SendFINMessageAsync(udpNetMsg, endPoint);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Utility.Debug.LogError($"Send net message exceotion:{e.Message}");
                 }
             }
         }
@@ -152,25 +182,27 @@ namespace Cosmos
                 UdpClientPeer tmpPeer;
                 clientPeerDict.TryGetValue(conv, out tmpPeer);
                 peerAbortHandler?.Invoke(conv);
-                Utility.Debug.LogWarning($"心跳检测， Conv :{ conv} 已经断线，对其进行移除操作 ");
+                NetPeerEventCore.Instance.Dispatch(NetOpCode._PeerDisconnect, tmpPeer);
+                Utility.Debug.LogWarning($"Heartbeat check ， Conv :{ conv}  is unavailable，remove peer ");
                 GameManager.ReferencePoolManager.Despawn(tmpPeer);
             }
             catch (Exception e)
             {
-                Utility.Debug.LogError($"心跳检测，移除失效peer失败", e);
+                Utility.Debug.LogError($"Heartbeat check，remove unavailable peer fail", e);
             }
         }
-        bool CreateClientPeer(UdpNetworkMessage udpNetMsg, IPEndPoint endPoint, out UdpClientPeer peer)
+        bool CreateClientPeer(UdpNetMessage udpNetMsg, IPEndPoint endPoint, out UdpClientPeer peer)
         {
             peer = default;
             bool result = false;
             if (!clientPeerDict.TryGetValue(udpNetMsg.Conv, out peer))
             {
                 peer = GameManager.ReferencePoolManager.Spawn<UdpClientPeer>();
-                peer.SetValue(SendMessage, AbortUnavilablePeer, udpNetMsg.Conv, endPoint);
+                peer.SetValue(SendMessageAsync, AbortUnavilablePeer, udpNetMsg.Conv, endPoint);
                 result = clientPeerDict.TryAdd(udpNetMsg.Conv, peer);
                 refreshHandler += peer.OnRefresh;
                 Utility.Debug.LogInfo($"Create ClientPeer  conv : {udpNetMsg.Conv}; PeerCount : {clientPeerDict.Count}");
+                NetPeerEventCore.Instance.Dispatch(NetOpCode._PeerConnect, peer);
             }
             return result;
         }

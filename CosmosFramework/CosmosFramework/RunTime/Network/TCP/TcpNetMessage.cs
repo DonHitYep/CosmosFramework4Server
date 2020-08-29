@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cosmos
 {
-    public class TcpNetworkMessage : INetworkMessage
+    public class TcpNetMessage : INetMessage
     {
         public uint Conv { get; set; }
 

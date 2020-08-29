@@ -2,6 +2,8 @@
 using Cosmos;
 using System.Net;
 using System.Net.Sockets;
+using System;
+using System.Diagnostics;
 
 namespace Cosmos.Network
 {
@@ -15,7 +17,7 @@ namespace Cosmos.Network
         int serverPort;
         string clientIP;
         int clientPort;
-        INetworkService service;
+        INetService service;
         IPEndPoint serverEndPoint;
         public IPEndPoint ServerEndPoint
         {
@@ -40,17 +42,17 @@ namespace Cosmos.Network
         {
             IsPause = false;
         }
-        public override void  OnRefresh()
+        public override void OnRefresh()
         {
             service?.OnRefresh();
         }
-        public void SendNetworkMessage(INetworkMessage netMsg)
+        public void SendNetworkMessage(INetMessage netMsg)
         {
-            service.SendMessage(netMsg);
+            service.SendMessageAsync(netMsg);
         }
-        public void SendNetworkMessage(INetworkMessage netMsg,IPEndPoint endPoint)
+        public void SendNetworkMessage(INetMessage netMsg, IPEndPoint endPoint)
         {
-            service.SendMessage(netMsg,endPoint);
+            service.SendMessageAsync(netMsg, endPoint);
         }
         /// <summary>
         /// 初始化网络模块
@@ -103,7 +105,7 @@ namespace Cosmos.Network
         /// 与远程建立连接；
         /// </summary>
         /// <param name="service">自定义实现的服务</param>
-        public void Connect(INetworkService service)
+        public void Connect(INetService service)
         {
             if (service == null)
             {
