@@ -11,5 +11,6 @@ namespace Cosmos.Log
         void Info(string msg);
         void Warring(string msg);
         void Error(Exception exception, string msg);
+        void Fatal(string msg);
     }
 }

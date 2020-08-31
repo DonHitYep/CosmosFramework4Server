@@ -27,19 +27,25 @@ namespace ProtocolCore
         public void Error(Exception exception, string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > ERROR : Exception Message : {exception?.Message} ；Exception line : {exception?.StackTrace}; Msg : {msg};nStackTrace[ - ] ：{st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > ERROR : Exception Message : {exception?.Message} ；Exception line : {exception?.StackTrace}; Msg : {msg};\nStackTrace[ - ] ：{st}";
            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         public void Info(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > INFO : {msg};nStackTrace[ - ] ：{st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > INFO : {msg};\nStackTrace[ - ] ：{st}";
             Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         public void Warring(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
             string str = $"{DateTime.Now.ToString()}[ - ] > WARN : {msg};\nStackTrace[ - ] ：{st}";
+            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
+        }
+        public void Fatal(string msg)
+        {
+            StackTrace st = new StackTrace(new StackFrame(4, true));
+            string str = $"{DateTime.Now.ToString()}[ - ] > FATAL : {msg};\nStackTrace[ - ] ：{st}";
             Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         /// <summary>

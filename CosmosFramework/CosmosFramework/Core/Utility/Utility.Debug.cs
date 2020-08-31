@@ -35,6 +35,10 @@ namespace Cosmos
             {
                 debugHelper?.LogError(o, context);
             }
+            public static void LogFatal(object o, Object context = null)
+            {
+                debugHelper?.LogFatal(o, context);
+            }
         }
     }
 }

@@ -32,7 +32,11 @@ namespace Cosmos.Log
         /// <param name="msg">消息体</param>
         public void Error(Exception exception, string msg)
         {
-            logHelper.Error(exception,msg);
+            logHelper.Error(exception, msg);
+        }
+        public void Fatal(Exception exception, string msg)
+        {
+            logHelper.Fatal( msg);
         }
     }
 }
