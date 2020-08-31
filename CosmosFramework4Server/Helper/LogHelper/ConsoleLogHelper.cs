@@ -27,19 +27,19 @@ namespace ProtocolCore
         public void Error(Exception exception, string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > Error : Exception Message : {exception?.Message} ；Exception line : {exception?.StackTrace}; Msg : {msg}; \n {st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > Error : Exception Message : {exception?.Message} ；Exception line : {exception?.StackTrace}; Msg : {msg};\nStackTrace[ - ] ：{st}";
            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         public void Info(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > Info : {msg};\n{st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > Info : {msg};\nStackTrace[ - ] ：{st}";
             Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         public void Warring(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
-            string str = $"{DateTime.Now.ToString()}[ - ] > Warring : {msg};\n {st}";
+            string str = $"{DateTime.Now.ToString()}[ - ] > Warring : {msg};\nStackTrace[ - ] ：{st}";
             Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
         }
         /// <summary>
