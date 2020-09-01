@@ -1,7 +1,7 @@
 ﻿using System;
 namespace Cosmos
 {
-    public abstract class Variable : IBehaviour, IRenewable
+    public abstract class Variable : IRenewable
     {
         protected Variable() { }
         /// <summary>
@@ -25,15 +25,5 @@ namespace Cosmos
         /// 重置变量;
         /// </summary>
         public virtual void OnRenewal() { }
-        /// <summary>
-        /// 空虚函数;
-        /// 初始化
-        /// </summary>
-        public virtual void OnInitialization() { }
-        /// <summary>
-        /// 空虚函数;
-        /// 终结释放变量;
-        /// </summary>
-        public virtual void OnTermination() { }
     }
 }
