@@ -187,7 +187,7 @@ namespace Cosmos
             }
             catch (Exception e)
             {
-                Utility.Debug.LogError($"Heartbeat check，remove unavailable peer fail", e);
+                Utility.Debug.LogError($"Heartbeat check，remove unavailable peer fail {e}");
             }
         }
         bool CreateClientPeer(UdpNetMessage udpNetMsg, IPEndPoint endPoint, out UdpClientPeer peer)

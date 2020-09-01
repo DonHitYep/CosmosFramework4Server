@@ -5,8 +5,6 @@ using System.Text;
 namespace Cosmos
 {
     public struct GenericValuePair<TValue, KValue> : IEquatable<GenericValuePair<TValue, KValue>>
-        where TValue:IComparable<TValue>
-        where KValue:IComparable<KValue>
     {
         public GenericValuePair(TValue tVar, KValue kVar)
         {
@@ -17,7 +15,7 @@ namespace Cosmos
         public KValue KVar { get; private set; }
         public bool Equals(GenericValuePair<TValue, KValue> other)
         {
-            return TVar.CompareTo(other.TVar) == 0 && KVar.CompareTo(other.KVar) == 0;
+            return TVar.Equals(other.TVar)&& KVar.Equals(other.KVar);
         }
         public static bool operator ==(GenericValuePair<TValue, KValue> a, GenericValuePair<TValue, KValue> b)
         {
