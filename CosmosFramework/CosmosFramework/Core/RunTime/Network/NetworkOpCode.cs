@@ -9,7 +9,7 @@ namespace Cosmos
     /// 0~150预留给框架;
     /// 其中0~50给服务器，51~100客户端，101~150前后端通用
     /// </summary>
-    public class NetOpCode
+    public class NetworkOpCode
     {
         public static readonly ushort _PeerConnect= 1;
         public static readonly ushort _PeerDisconnect= 2;

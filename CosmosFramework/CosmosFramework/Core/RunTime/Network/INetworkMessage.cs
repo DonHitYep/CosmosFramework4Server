@@ -5,7 +5,7 @@ namespace Cosmos
     /// <summary>
     /// 网络消息接口
     /// </summary>
-    public interface INetMessage
+    public interface INetworkMessage
     {
         uint Conv { get; }
         byte[] EncodeMessage();

@@ -5,13 +5,13 @@ using System.Text;
 
 namespace Cosmos
 {
-    public class KcpChannel : NetChannel
+    public class KcpChannel : NetworkChannel
     {
-        public override byte[] EncodingMessage(INetMessage message)
+        public override byte[] EncodingMessage(INetworkMessage message)
         {
             return null;
         }
-        public override INetMessage ReceiveMessage(Socket client)
+        public override INetworkMessage ReceiveMessage(Socket client)
         {
             return null;
         }

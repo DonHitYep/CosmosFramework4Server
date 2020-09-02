@@ -17,7 +17,7 @@ namespace Cosmos.Network
         int serverPort;
         string clientIP;
         int clientPort;
-        INetService service;
+        INetworkService service;
         IPEndPoint serverEndPoint;
         public IPEndPoint ServerEndPoint
         {
@@ -46,11 +46,11 @@ namespace Cosmos.Network
         {
             service?.OnRefresh();
         }
-        public void SendNetworkMessage(INetMessage netMsg)
+        public void SendNetworkMessage(INetworkMessage netMsg)
         {
             service.SendMessageAsync(netMsg);
         }
-        public void SendNetworkMessage(INetMessage netMsg, IPEndPoint endPoint)
+        public void SendNetworkMessage(INetworkMessage netMsg, IPEndPoint endPoint)
         {
             service.SendMessageAsync(netMsg, endPoint);
         }
@@ -105,7 +105,7 @@ namespace Cosmos.Network
         /// 与远程建立连接；
         /// </summary>
         /// <param name="service">自定义实现的服务</param>
-        public void Connect(INetService service)
+        public void Connect(INetworkService service)
         {
             if (service == null)
             {

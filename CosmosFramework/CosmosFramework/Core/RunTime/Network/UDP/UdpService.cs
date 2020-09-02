@@ -16,7 +16,7 @@ namespace Cosmos.Network
     /// UDP socket服务；
     /// 这里管理其他接入的远程对象；
     /// </summary>
-    public class UdpService : INetService, IControllable
+    public class UdpService : INetworkService, IControllable
     {
         public bool IsPause { get; private set; }
         /// <summary>
@@ -74,14 +74,14 @@ namespace Cosmos.Network
         /// 发送报文信息
         /// </summary>
         /// <param name="netMsg">消息体</param>
-        public virtual void SendMessageAsync(INetMessage netMsg) { }
+        public virtual void SendMessageAsync(INetworkMessage netMsg) { }
         /// <summary>
         /// 空虚函数;
         /// 发送报文信息
         /// </summary>
         /// <param name="netMsg">消息体</param>
         /// <param name="endPoint">远程对象</param>
-        public virtual void SendMessageAsync(INetMessage netMsg, IPEndPoint endPoint) { }
+        public virtual void SendMessageAsync(INetworkMessage netMsg, IPEndPoint endPoint) { }
         /// <summary>
         /// 非空虚函数；
         /// 轮询更新;

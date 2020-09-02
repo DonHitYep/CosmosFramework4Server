@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 namespace Cosmos
 {
-    public class UdpNetMessage : INetMessage, IReference
+    public class UdpNetMessage : INetworkMessage, IReference
     {
         /// <summary>
         /// 消息包体大小；
@@ -254,7 +254,7 @@ namespace Cosmos
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.ACK;
             udpNetMsg.Length = 0;
-            udpNetMsg.OperationCode = NetOpCode._Heartbeat;
+            udpNetMsg.OperationCode = NetworkOpCode._Heartbeat;
             return udpNetMsg;
         }
         public static UdpNetMessage DefaultMessageAsync(uint conv)

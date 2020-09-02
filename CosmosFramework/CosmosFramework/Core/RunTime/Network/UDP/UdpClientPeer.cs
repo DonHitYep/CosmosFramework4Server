@@ -54,7 +54,7 @@ namespace Cosmos.Network
         /// 发送网络消息委托；
         /// 这里函数指针指向service的sendMessage
         /// </summary>
-        Action<INetMessage> sendMessageHandler;
+        Action<INetworkMessage> sendMessageHandler;
         Action<uint> abortPeerHandler;
         public UdpClientPeer()
         {
@@ -71,11 +71,11 @@ namespace Cosmos.Network
         /// 发送消息给这个peer的远程对象
         /// </summary>
         /// <param name="netMsg">消息体</param>
-        public virtual void SendMessage(INetMessage netMsg)
+        public virtual void SendMessage(INetworkMessage netMsg)
         {
             sendMessageHandler?.Invoke(netMsg);
         }
-        public void SetValue(Action<INetMessage> sendMsgCallback, Action<uint> abortPeerCallback, uint conv, IPEndPoint endPoint)
+        public void SetValue(Action<INetworkMessage> sendMsgCallback, Action<uint> abortPeerCallback, uint conv, IPEndPoint endPoint)
         {
             this.Conv = conv;
             this.PeerEndPoint = endPoint;
@@ -92,7 +92,7 @@ namespace Cosmos.Network
         /// </summary>
         /// <param name="service">udp服务</param>
         /// <param name="msg">消息体</param>
-        public virtual void MessageHandler(INetMessage msg)
+        public virtual void MessageHandler(INetworkMessage msg)
         {
             UdpNetMessage netMsg = msg as UdpNetMessage;
             switch (netMsg.Cmd)
@@ -119,7 +119,7 @@ namespace Cosmos.Network
                         var ack = UdpNetMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
                         sendMessageHandler?.Invoke(ack);
-                        if (netMsg.OperationCode == NetOpCode._Heartbeat)
+                        if (netMsg.OperationCode == NetworkOpCode._Heartbeat)
                         {
                             Heartbeat.OnRenewal();
                             Utility.Debug.LogInfo($" Send ACK Message，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
@@ -128,7 +128,7 @@ namespace Cosmos.Network
                         {
                             //发送后进行原始报文数据的处理
                             HandleMsgSN(netMsg);
-                            NetMessageEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
+                            NetworkMsgEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
                         }
                     }
                     break;
