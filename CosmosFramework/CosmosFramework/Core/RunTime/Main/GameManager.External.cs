@@ -17,7 +17,7 @@ namespace Cosmos
             /// <summary>
             /// 外源模块容器；
             /// </summary>
-          static   Dictionary<Type, IModule> externalModuleDict = new Dictionary<Type, IModule>();
+          static   Dictionary<Type, IModule> moduleDict = new Dictionary<Type, IModule>();
             /// <summary>
             /// 获取外源模块；
             /// 此类模块不由CF框架生成，由用户自定义
@@ -26,16 +26,16 @@ namespace Cosmos
             /// </summary>
             /// <typeparam name="TModule">实现模块功能的类对象</typeparam>
             /// <returns>获取的模块</returns>
-            public static TModule GetExternalModule<TModule>()
+            public static TModule GetModule<TModule>()
                 where TModule : Module<TModule>, new()
             {
                 Type type = typeof(TModule);
                 IModule module = default;
-                var result = externalModuleDict.TryGetValue(type, out module);
+                var result = moduleDict.TryGetValue(type, out module);
                 if (!result)
                 {
                     module = new TModule();
-                    externalModuleDict.Add(type, module);
+                    moduleDict.Add(type, module);
                     module.OnInitialization();
                     Utility.Debug.LogInfo($"生成新模块 , Module :{module.ToString()} ");
                     GameManager.Instance.refreshHandler += module.OnRefresh;
@@ -48,13 +48,13 @@ namespace Cosmos
             /// 需要从Module类派生;
             /// </summary>
             /// <typeparam name="TModule"></typeparam>
-            public static void RemoveExternalModule<TModule>()
+            public static void RemoveModule<TModule>()
         where TModule : Module<TModule>, new()
             {
                 Type type = typeof(TModule);
-                if (externalModuleDict.ContainsKey(type))
+                if (moduleDict.ContainsKey(type))
                 {
-                    var module = externalModuleDict[type];
+                    var module = moduleDict[type];
                     try
                     {
                         GameManager.Instance.refreshHandler -= module.OnRefresh;
@@ -64,18 +64,18 @@ namespace Cosmos
                         throw e;
                     }
                     module.OnTermination();
-                    externalModuleDict.Remove(type);
+                    moduleDict.Remove(type);
                 }
             }
-            public static bool HasExternalModule<TModule>()
+            public static bool HasModule<TModule>()
         where TModule : Module<TModule>, new()
             {
                 Type type = typeof(TModule);
-                return externalModuleDict.ContainsKey(type);
+                return moduleDict.ContainsKey(type);
             }
-            public static void ClearAllExternalModule()
+            public static void ClearAllModule()
             {
-                externalModuleDict.Clear();
+                moduleDict.Clear();
             }
         }
     }
