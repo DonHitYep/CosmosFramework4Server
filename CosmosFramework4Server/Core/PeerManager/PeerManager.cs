@@ -9,13 +9,13 @@ namespace CosmosFramework4Server
         public override void OnInitialization()
         {
             Utility.Debug.LogInfo("PeerManager OnInitialization");
-            NetworkMsgEventCore.Instance.AddEventListener(0, PeerHandler);
+            NetworkMsgEventCore.Instance.AddEventListener(10, PeerHandler);
             NetworkPeerEventCore.Instance.AddEventListener(NetworkOpCode._PeerConnect, OnPeerConnectHandler);
             NetworkPeerEventCore.Instance.AddEventListener(NetworkOpCode._PeerDisconnect, OnPeerDisConnectHandler);
         }
         void PeerHandler(INetworkMessage netMsg)
         {
-            Utility.Debug.LogWarning("PeerManager接收到OperationCode  为 0  的网络广播事件"); ;
+            Utility.Debug.LogWarning($"PeerManager接收到网络广播事件:{netMsg.ToString()}；消息体：{Utility.Converter.GetString((netMsg as UdpNetMessage).ServiceMsg)}"); 
         }
         void OnPeerConnectHandler(IRemotePeer peer)
         {

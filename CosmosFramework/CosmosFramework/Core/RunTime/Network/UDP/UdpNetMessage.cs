@@ -133,8 +133,7 @@ namespace Cosmos
         /// <param name="buffer">包含所有信息的buffer</param>
         public UdpNetMessage(byte[] buffer)
         {
-            Buffer = buffer;
-            DecodeMessage(Buffer);
+            DecodeMessage(buffer);
         }
         /// <summary>
         /// 消息构造
@@ -155,21 +154,20 @@ namespace Cosmos
             Snd_nxt = SN + 1;
             OperationCode = udpNetMsg.OperationCode;
         }
-        public void CacheDecodeBuffer(byte[] buffer)
+        public bool CacheDecodeBuffer(byte[] buffer)
         {
-            Buffer = buffer;
-            DecodeMessage(Buffer);
+            return DecodeMessage(buffer);
         }
         /// <summary>
         /// 解析UDP数据报文
         /// </summary>
         /// <param name="buffer"></param>
-        public void DecodeMessage(byte[] buffer)
+        public bool DecodeMessage(byte[] buffer)
         {
             if (buffer == null)
             {
                 IsFull = false;
-                return;
+                return false;
             }
             if (buffer.Length >= 2)
             {
@@ -182,11 +180,20 @@ namespace Cosmos
             else
             {
                 IsFull = false;
-                return;
+                return false;
             }
             Conv = BitConverter.ToUInt32(buffer, 2);
+
+            Utility.Debug.LogWarning(Conv);
+
             Cmd = BitConverter.ToUInt16(buffer, 6);
+
+            Utility.Debug.LogWarning(Cmd);
+
             TS = BitConverter.ToInt64(buffer, 8);
+
+            Utility.Debug.LogWarning(TS);
+
             SN = BitConverter.ToUInt32(buffer, 16);
             Snd_una = BitConverter.ToUInt32(buffer, 20);
             Snd_nxt = BitConverter.ToUInt32(buffer, 24);
@@ -196,8 +203,9 @@ namespace Cosmos
             {
                 ServiceMsg = new byte[Length];
                 Array.Copy(buffer, 34, ServiceMsg, 0, Length);
-                Utility.Debug.LogInfo($" Conv : {Conv} ,Msg : {Utility.Converter.GetString(ServiceMsg)}");
             }
+            Utility.Debug.LogError(ToString());
+            return true;
         }
         /// <summary>
         /// 编码UDP报文消息
@@ -205,9 +213,9 @@ namespace Cosmos
         /// <returns>编码后的消息字节流</returns>
         public byte[] EncodeMessage()
         {
-            byte[] data = new byte[34 + Length];
             if (Cmd == KcpProtocol.ACK)
                 Length = 0;
+            byte[] data = new byte[34 + Length];
             byte[] len = BitConverter.GetBytes(Length);
             byte[] conv = BitConverter.GetBytes(Conv);
             byte[] cmd = BitConverter.GetBytes(Cmd);
@@ -229,8 +237,9 @@ namespace Cosmos
             //如果不是ACK报文，则追加数据
             if (Cmd == KcpProtocol.MSG)
                 if (ServiceMsg != null)//空包保护
-                    Array.Copy(ServiceMsg, 0, data, 34, ServiceMsg.Length);
+                    Array.Copy(ServiceMsg, 0, data, 34,ServiceMsg.Length);
             Buffer = data;
+            Utility.Debug.LogWarning(TS);
             return data;
         }
         public byte[] GetBuffer()
@@ -243,16 +252,18 @@ namespace Cosmos
             Conv = 0;
             Snd_una = 0;
             Rcv_nxt = 0;
+            Snd_nxt = 0;
             SN = 0;
             TS = 0;
             Cmd = KcpProtocol.NIL;
             OperationCode = 0;
+            RecurCount = 0;
             ServiceMsg = null;
             IsFull = false;
         }
         public override string ToString()
         {
-            string str = $"Length:{Length} ; Conv:{Conv} ;Cmd:{Cmd};TS :{TS } ;  SN:{SN} ; Snd_una:{Snd_una} ; Rcv_nxt:{Rcv_nxt} ; OperationCode : {OperationCode} ; RecurCount:{RecurCount} ";
+            string str = $"Length:{Length} ; Conv:{Conv} ;Cmd:{Cmd};TS :{TS } ;  SN:{SN} ; Snd_una:{Snd_una} ; Snd_nxt :{Snd_nxt} ;Rcv_nxt:{Rcv_nxt} ; OperationCode : {OperationCode} ; RecurCount:{RecurCount} ";
             return str;
         }
         public static UdpNetMessage ConvertToACK(UdpNetMessage srcMsg)
@@ -263,6 +274,7 @@ namespace Cosmos
             ack.SN = srcMsg.SN;
             ack.Cmd = KcpProtocol.ACK;
             ack.OperationCode = srcMsg.OperationCode;
+            ack.RecurCount = 0;
             ack.EncodeMessage();
             return ack;
         }

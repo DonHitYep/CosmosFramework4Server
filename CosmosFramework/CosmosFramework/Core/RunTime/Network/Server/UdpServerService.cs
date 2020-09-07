@@ -42,8 +42,8 @@ namespace Cosmos
             {
                 UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
-                if (result)
-                {
+                //if (result)
+                //{
                     if (udpSocket != null)
                     {
                         try
@@ -61,7 +61,7 @@ namespace Cosmos
                             Utility.Debug.LogError($"Send net message exceotion :{e.Message}");
                         }
                     }
-                }
+                //}
             }
         }
         public override async void SendMessageAsync(INetworkMessage netMsg)
@@ -70,10 +70,12 @@ namespace Cosmos
             if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
             {
                 UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
+                Utility.Debug.LogWarning($"Before peer.EncodeMessage{udpNetMsg}");
                 var result = peer.EncodeMessage(ref udpNetMsg);
-                if (result)
-                {
-                    if (udpSocket != null)
+                Utility.Debug.LogWarning($"After peer.EncodeMessage{udpNetMsg}");
+                //if (result)
+                //{
+                if (udpSocket != null)
                     {
                         try
                         {
@@ -83,6 +85,7 @@ namespace Cosmos
                             {
                                 //消息未完全发送，则重新发送
                                 SendMessageAsync(udpNetMsg);
+                                Utility.Debug.LogInfo($"Send net KCP_ACK message");
                             }
                         }
                         catch (Exception e)
@@ -90,7 +93,7 @@ namespace Cosmos
                             Utility.Debug.LogError($"Send net message exceotion : {e.Message}");
                         }
                     }
-                }
+                //}
             }
         }
         public override void OnRefresh()
@@ -104,7 +107,7 @@ namespace Cosmos
                     UdpNetMessage netMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
                     netMsg.CacheDecodeBuffer(data.Buffer);
                     if (netMsg.Cmd == KcpProtocol.MSG)
-                        Utility.Debug.LogInfo($" Decode net message：{netMsg.ToString()} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)}");
+                        Utility.Debug.LogInfo($" OnRefresh KCP_MSG：{netMsg} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)},TS:{netMsg.TS}");
                     if (netMsg.IsFull)
                     {
                         if (netMsg.Conv == 0)

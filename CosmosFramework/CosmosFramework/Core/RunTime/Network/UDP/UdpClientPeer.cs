@@ -80,7 +80,7 @@ namespace Cosmos.Network
             this.Conv = conv;
             this.PeerEndPoint = endPoint;
             latestPollingTime = Utility.Time.MillisecondNow() + interval;
-            this.sendMessageHandler = sendMsgCallback;
+            this.sendMessageHandler += sendMsgCallback;
             this.abortPeerHandler = abortPeerCallback;
             Heartbeat.Conv = conv;
             Heartbeat.OnActive();
@@ -103,39 +103,42 @@ namespace Cosmos.Network
                         UdpNetMessage tmpMsg;
                         if (ackMsgDict.TryRemove(netMsg.SN, out tmpMsg))
                         {
-                            Utility.Debug.LogInfo($" Conv :{Conv}，Receive ACK Message");
+                            Utility.Debug.LogInfo($" Conv :{Conv}，Receive KCP_ACK Message");
                         }
                         else
                         {
                             if (netMsg.Conv != 0)
-                                Utility.Debug.LogError($"Receive ACK Message Exception；SN : {netMsg.SN} ");
+                                Utility.Debug.LogError($"Receive KCP_ACK Message Exception；SN : {netMsg.SN} ");
                         }
                     }
                     break;
                 case KcpProtocol.MSG:
                     {
-                        Utility.Debug.LogInfo($"Conv : {Conv} ,Receive MSG Message");
+                        Utility.Debug.LogInfo($"Conv : {Conv} ,Receive KCP_MSG ：{netMsg},消息体:{Utility.Converter.GetString(netMsg .ServiceMsg)}");
                         //生成一个ACK报文，并返回发送
                         var ack = UdpNetMessage.ConvertToACK(netMsg);
+                        Utility.Debug.LogInfo($"HandleMsg Before Invoke KCP_ACK ，conv :{Conv} ; {ack}");
+                        Utility.Debug.LogInfo($"HandleMsg Before Invoke KCP_MSG ，conv :{Conv} ; {netMsg}");
                         //这里需要发送ACK报文
                         sendMessageHandler?.Invoke(ack);
                         if (netMsg.OperationCode == NetworkOpCode._Heartbeat)
                         {
                             Heartbeat.OnRenewal();
-                            Utility.Debug.LogInfo($" Send ACK Message，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
+                            Utility.Debug.LogInfo($" Send KCP_ACK Message，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
                         }
                         else
                         {
+                            Utility.Debug.LogInfo($"HandleMsg After Invoke KCP_ACK ，conv :{Conv} ; {ack}");
+                            Utility.Debug.LogInfo($"HandleMsg After Invoke KCP_MSG ，conv :{Conv} ; {netMsg}");
                             //发送后进行原始报文数据的处理
                             HandleMsgSN(netMsg);
-                            NetworkMsgEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
                         }
                     }
                     break;
                 case KcpProtocol.SYN:
                     {
                         //建立连接标志
-                        Utility.Debug.LogInfo($"Conv : {Conv} ,Receive SYN Message");
+                        Utility.Debug.LogInfo($"Conv : {Conv} ,Receive KCP_SYN Message");
                         //生成一个ACK报文，并返回发送
                         var ack = UdpNetMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
@@ -145,7 +148,7 @@ namespace Cosmos.Network
                 case KcpProtocol.FIN:
                     {
                         //结束建立连接Cmd，这里需要谨慎考虑；
-                        Utility.Debug.LogInfo($"Conv : {Conv} ,Receive FIN Message");
+                        Utility.Debug.LogInfo($"Conv : {Conv} ,Receive KCP_FIN Message");
                         AbortConnection();
                     }
                     break;
@@ -158,13 +161,13 @@ namespace Cosmos.Network
         /// <param name="service">服务端的Peer</param>
         public void OnRefresh()
         {
+            Heartbeat?.OnRefresh();
             long now = Utility.Time.MillisecondNow();
             if (now <= latestPollingTime)
                 return;
             latestPollingTime = now + interval;
             if (!Available)
                 return;
-            Heartbeat?.OnRefresh();
             foreach (var msg in ackMsgDict.Values)
             {
                 if (msg.RecurCount >= 30)
@@ -180,6 +183,7 @@ namespace Cosmos.Network
                     msg.RecurCount += 1;
                     //超时重发
                     sendMessageHandler?.Invoke(msg);
+                    Utility.Debug.LogInfo($"Peer Conv:{Conv }  ; {msg.ToString()}");
                 }
             }
         }
@@ -188,13 +192,13 @@ namespace Cosmos.Network
         /// </summary>
         /// <param name="netMsg">生成的消息</param>
         /// <returns>是否编码成功</returns>
-        public bool EncodeMessage(ref UdpNetMessage netMsg)
+        public  bool EncodeMessage(ref UdpNetMessage netMsg)
         {
             netMsg.TS = Utility.Time.MillisecondTimeStamp();
             SendSN += 1;
             netMsg.SN = SendSN;
             netMsg.Snd_nxt = SendSN + 1;
-            netMsg.EncodeMessage();
+            //netMsg.EncodeMessage();
             bool result = true;
             if (Conv != 0)
             {
@@ -210,7 +214,7 @@ namespace Cosmos.Network
                 //若会话ID不为0，则缓存入ACK容器中，等接收成功后进行移除
                 ///*   result=*/ ackMsgDict.TryAdd(netMsg.SN, netMsg);
             }
-            return result; ;
+            return result;
         }
         /// <summary>
         /// 终止连接
@@ -255,10 +259,12 @@ namespace Cosmos.Network
                 ackMsgDict.TryAdd(netMsg.SN, netMsg);
             }
             HandleSN = netMsg.SN;
-            Utility.Debug.LogWarning($"Peer Conv:{Conv}， HandleSN : {HandleSN}");
+            NetworkMsgEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
+            Utility.Debug.LogWarning($"Peer Conv:{Conv}， HandleMsgSN : {netMsg.ToString()}");
             UdpNetMessage nxtNetMsg;
             if (ackMsgDict.TryRemove(HandleSN + 1, out nxtNetMsg))
             {
+                Utility.Debug.LogInfo($"HandleMsgSN Next KCP_MSG : {netMsg.ToString()}");
                 HandleMsgSN(nxtNetMsg);
             }
         }
