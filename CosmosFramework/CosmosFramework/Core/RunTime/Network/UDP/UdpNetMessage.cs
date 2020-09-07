@@ -127,10 +127,33 @@ namespace Cosmos
             Cmd = cmd;
             OperationCode = opCode;
         }
+        /// <summary>
+        /// 消息构造
+        /// </summary>
+        /// <param name="buffer">包含所有信息的buffer</param>
         public UdpNetMessage(byte[] buffer)
         {
             Buffer = buffer;
             DecodeMessage(Buffer);
+        }
+        /// <summary>
+        /// 消息构造
+        /// </summary>
+        /// <param name="udpNetMsg">另一个消息体</param>
+        /// <param name="message">转换为二进制的消息体</param>
+        public UdpNetMessage(UdpNetMessage udpNetMsg, byte[] message)
+        {
+            if (message == null)
+                Length = 0;
+            else
+                Length = (ushort)message.Length;
+            Conv = udpNetMsg.Conv;
+            SN = udpNetMsg.Conv;
+            Cmd = udpNetMsg.Cmd;
+            ServiceMsg = message;
+            Rcv_nxt = udpNetMsg.SN;
+            Snd_nxt = SN + 1;
+            OperationCode = udpNetMsg.OperationCode;
         }
         public void CacheDecodeBuffer(byte[] buffer)
         {
