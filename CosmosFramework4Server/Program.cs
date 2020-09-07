@@ -31,20 +31,6 @@ namespace CosmosFramework4Server
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
             GameManager.External.GetModule<PeerManager>();
             Task.Run(GameManagerAgent.Instance.OnRefresh);
-
-            var bit= Utility.Encode.ConvertToByte("Cosmos");
-            UdpNetMessage udpNetMsg = new UdpNetMessage(75535, 7553564, 4,8, bit);
-            udpNetMsg.TS = Utility.Time.MillisecondNow();
-            Utility.Debug.LogError(udpNetMsg);
-            UdpNetMessage netMsg = new UdpNetMessage();
-            netMsg.DecodeMessage(udpNetMsg.EncodeMessage());
-            Utility.Debug.LogError(netMsg+" ; "+Utility.Encode.ConvertToString( netMsg.ServiceMsg));
-
-            long now = Utility.Time.MillisecondTimeStamp();
-            Utility.Debug.LogWarning(now);
-            byte[] tsb = BitConverter.GetBytes(now);
-            long bitlong = BitConverter.ToInt64(tsb, 0);
-            Utility.Debug.LogWarning(bitlong);
             while (true) { }
          //   Task.Run(AsyncCoroutine.Instance.Start);
         }

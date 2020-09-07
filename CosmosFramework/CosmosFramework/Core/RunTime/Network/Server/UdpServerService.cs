@@ -42,8 +42,8 @@ namespace Cosmos
             {
                 UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
-                //if (result)
-                //{
+                if (result)
+                {
                     if (udpSocket != null)
                     {
                         try
@@ -61,7 +61,7 @@ namespace Cosmos
                             Utility.Debug.LogError($"Send net message exceotion :{e.Message}");
                         }
                     }
-                //}
+                }
             }
         }
         public override async void SendMessageAsync(INetworkMessage netMsg)
@@ -70,12 +70,10 @@ namespace Cosmos
             if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
             {
                 UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
-                Utility.Debug.LogWarning($"Before peer.EncodeMessage{udpNetMsg}");
                 var result = peer.EncodeMessage(ref udpNetMsg);
-                Utility.Debug.LogWarning($"After peer.EncodeMessage{udpNetMsg}");
-                //if (result)
-                //{
-                if (udpSocket != null)
+                if (result)
+                {
+                    if (udpSocket != null)
                     {
                         try
                         {
@@ -93,9 +91,9 @@ namespace Cosmos
                             Utility.Debug.LogError($"Send net message exceotion : {e.Message}");
                         }
                     }
-                //}
+                }
             }
-        }
+            }
         public override void OnRefresh()
         {
             refreshHandler?.Invoke();

@@ -9,11 +9,11 @@ namespace Cosmos
     public class UdpNetMessage : INetworkMessage, IReference
     {
         /// <summary>
-        /// 消息包体大小；
+        /// 业务报文消息包体大小；
         /// 取值范围0~65535；
         /// 约64K一个包
         /// </summary>
-        public ushort Length { get; private set; }
+        public ushort ServiceMsgLength { get; private set; }
         /// <summary>
         /// 会话ID;
         /// 为一个表示会话编号的整数，
@@ -83,7 +83,7 @@ namespace Cosmos
         /// <param name="cmd">协议ID</param>
         public UdpNetMessage(uint conv, byte cmd)
         {
-            Length = 0;
+            ServiceMsgLength = 0;
             Conv = conv;
             Cmd = cmd;
         }
@@ -98,9 +98,9 @@ namespace Cosmos
         public UdpNetMessage(uint conv, uint sn, byte cmd, ushort opCode, byte[] message)
         {
             if (message == null)
-                Length = 0;
+                ServiceMsgLength = 0;
             else
-                Length = (ushort)message.Length;
+                ServiceMsgLength = (ushort)message.Length;
             Conv = conv;
             SN = sn;
             Cmd = cmd;
@@ -143,9 +143,9 @@ namespace Cosmos
         public UdpNetMessage(UdpNetMessage udpNetMsg, byte[] message)
         {
             if (message == null)
-                Length = 0;
+                ServiceMsgLength = 0;
             else
-                Length = (ushort)message.Length;
+                ServiceMsgLength = (ushort)message.Length;
             Conv = udpNetMsg.Conv;
             SN = udpNetMsg.Conv;
             Cmd = udpNetMsg.Cmd;
@@ -171,8 +171,8 @@ namespace Cosmos
             }
             if (buffer.Length >= 2)
             {
-                Length = BitConverter.ToUInt16(buffer, 0);
-                if (buffer.Length == Length + 34)
+                ServiceMsgLength = BitConverter.ToUInt16(buffer, 0);
+                if (buffer.Length == ServiceMsgLength + 34)
                 {
                     IsFull = true;
                 }
@@ -183,17 +183,8 @@ namespace Cosmos
                 return false;
             }
             Conv = BitConverter.ToUInt32(buffer, 2);
-
-            Utility.Debug.LogWarning(Conv);
-
             Cmd = BitConverter.ToUInt16(buffer, 6);
-
-            Utility.Debug.LogWarning(Cmd);
-
             TS = BitConverter.ToInt64(buffer, 8);
-
-            Utility.Debug.LogWarning(TS);
-
             SN = BitConverter.ToUInt32(buffer, 16);
             Snd_una = BitConverter.ToUInt32(buffer, 20);
             Snd_nxt = BitConverter.ToUInt32(buffer, 24);
@@ -201,10 +192,9 @@ namespace Cosmos
             OperationCode = BitConverter.ToUInt16(buffer, 32);
             if (Cmd == KcpProtocol.MSG)
             {
-                ServiceMsg = new byte[Length];
-                Array.Copy(buffer, 34, ServiceMsg, 0, Length);
+                ServiceMsg = new byte[ServiceMsgLength];
+                Array.Copy(buffer, 34, ServiceMsg, 0, ServiceMsgLength);
             }
-            Utility.Debug.LogError(ToString());
             return true;
         }
         /// <summary>
@@ -214,9 +204,9 @@ namespace Cosmos
         public byte[] EncodeMessage()
         {
             if (Cmd == KcpProtocol.ACK)
-                Length = 0;
-            byte[] data = new byte[34 + Length];
-            byte[] len = BitConverter.GetBytes(Length);
+                ServiceMsgLength = 0;
+            byte[] data = new byte[34 + ServiceMsgLength];
+            byte[] len = BitConverter.GetBytes(ServiceMsgLength);
             byte[] conv = BitConverter.GetBytes(Conv);
             byte[] cmd = BitConverter.GetBytes(Cmd);
             byte[] ts = BitConverter.GetBytes(TS);
@@ -228,7 +218,7 @@ namespace Cosmos
             Array.Copy(len, 0, data, 0, 2);
             Array.Copy(conv, 0, data, 2, 4);
             Array.Copy(cmd, 0, data, 6, 2);
-            Array.Copy(ts, 0, data, 10, 8);
+            Array.Copy(ts, 0, data, 8, 8);
             Array.Copy(sn, 0, data, 16, 4);
             Array.Copy(snd_una, 0, data, 20, 4);
             Array.Copy(snd_nxt, 0, data, 24, 4);
@@ -239,7 +229,6 @@ namespace Cosmos
                 if (ServiceMsg != null)//空包保护
                     Array.Copy(ServiceMsg, 0, data, 34,ServiceMsg.Length);
             Buffer = data;
-            Utility.Debug.LogWarning(TS);
             return data;
         }
         public byte[] GetBuffer()
@@ -248,7 +237,7 @@ namespace Cosmos
         }
         public void Clear()
         {
-            Length = 0;
+            ServiceMsgLength = 0;
             Conv = 0;
             Snd_una = 0;
             Rcv_nxt = 0;
@@ -263,7 +252,7 @@ namespace Cosmos
         }
         public override string ToString()
         {
-            string str = $"Length:{Length} ; Conv:{Conv} ;Cmd:{Cmd};TS :{TS } ;  SN:{SN} ; Snd_una:{Snd_una} ; Snd_nxt :{Snd_nxt} ;Rcv_nxt:{Rcv_nxt} ; OperationCode : {OperationCode} ; RecurCount:{RecurCount} ";
+            string str = $"Length:{ServiceMsgLength} ; Conv:{Conv} ;Cmd:{Cmd};TS :{TS } ;  SN:{SN} ; Snd_una:{Snd_una} ; Snd_nxt :{Snd_nxt} ;Rcv_nxt:{Rcv_nxt} ; OperationCode : {OperationCode} ; RecurCount:{RecurCount} ";
             return str;
         }
         public static UdpNetMessage ConvertToACK(UdpNetMessage srcMsg)
@@ -288,7 +277,7 @@ namespace Cosmos
             var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.ACK;
-            udpNetMsg.Length = 0;
+            udpNetMsg.ServiceMsgLength = 0;
             udpNetMsg.OperationCode = NetworkOpCode._Heartbeat;
             return udpNetMsg;
         }
@@ -304,7 +293,7 @@ namespace Cosmos
                var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
                udpNetMsg.Conv = conv;
                udpNetMsg.Cmd = KcpProtocol.MSG;
-               udpNetMsg.Length = 0;
+               udpNetMsg.ServiceMsgLength = 0;
                udpNetMsg.OperationCode = 0;
                return udpNetMsg;
            });

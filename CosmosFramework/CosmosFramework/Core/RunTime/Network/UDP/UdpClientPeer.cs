@@ -117,8 +117,6 @@ namespace Cosmos.Network
                         Utility.Debug.LogInfo($"Conv : {Conv} ,Receive KCP_MSG ：{netMsg},消息体:{Utility.Converter.GetString(netMsg .ServiceMsg)}");
                         //生成一个ACK报文，并返回发送
                         var ack = UdpNetMessage.ConvertToACK(netMsg);
-                        Utility.Debug.LogInfo($"HandleMsg Before Invoke KCP_ACK ，conv :{Conv} ; {ack}");
-                        Utility.Debug.LogInfo($"HandleMsg Before Invoke KCP_MSG ，conv :{Conv} ; {netMsg}");
                         //这里需要发送ACK报文
                         sendMessageHandler?.Invoke(ack);
                         if (netMsg.OperationCode == NetworkOpCode._Heartbeat)
@@ -128,8 +126,6 @@ namespace Cosmos.Network
                         }
                         else
                         {
-                            Utility.Debug.LogInfo($"HandleMsg After Invoke KCP_ACK ，conv :{Conv} ; {ack}");
-                            Utility.Debug.LogInfo($"HandleMsg After Invoke KCP_MSG ，conv :{Conv} ; {netMsg}");
                             //发送后进行原始报文数据的处理
                             HandleMsgSN(netMsg);
                         }
