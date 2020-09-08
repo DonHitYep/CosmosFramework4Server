@@ -10,7 +10,6 @@
         Network,
         Data,
         ReferencePool,
-        Log,
         Polling
     }
 }

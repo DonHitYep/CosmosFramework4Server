@@ -1,6 +1,5 @@
 ﻿using System;
 using Cosmos;
-using Cosmos.Log;
 using Cosmos.Network;
 using System.Threading.Tasks;
 using ProtocolCore;
@@ -25,7 +24,7 @@ namespace CosmosFramework4Server
         static void Main(string[] args)
         {
             SetConsoleCtrlHandler(newDelegate, true);
-            GameManager.LogManager.SetHelper(new ConsoleLogHelper());
+            Utility.Logger.SetHelper(new ConsoleLogHelper());
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);

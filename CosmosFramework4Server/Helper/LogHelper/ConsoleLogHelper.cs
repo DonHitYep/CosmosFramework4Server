@@ -5,48 +5,48 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using Cosmos;
-using Cosmos.Log;
 
 namespace ProtocolCore
 {
-    public class ConsoleLogHelper : ILogHelper
+    public class ConsoleLogHelper : ILoggerHelper
     {
-        string logPath;
-        string logFileName="CosmosServerLog.log";
+        string logFullPath;
+        string logFileName = "CosmosFrameworkServer.log";
+        string logFolderName = "Log";
+        /// <summary>
+        /// 默认构造，使用默认地址与默认log名称
+        /// </summary>
         public ConsoleLogHelper()
         {
-            if (logPath == null)
-            {
-                DirectoryInfo info = Directory.GetParent(Environment.CurrentDirectory);
-                string str = info.Parent.Parent.Parent.FullName;
-                logPath = Utility.IO.CombineRelativePath(str, "ServerLog");
-                Utility.IO.CreateFolder(logPath);
-                System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
-            }
+            DirectoryInfo info = Directory.GetParent(Environment.CurrentDirectory);
+            string str = info.Parent.Parent.Parent.FullName;
+            logFullPath = Utility.IO.CombineRelativePath(str, logFolderName);
+            Utility.IO.CreateFolder(logFullPath);
+            System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
         }
         public void Error(Exception exception, string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
             string str = $"{DateTime.Now.ToString()}[ - ] > ERROR : Exception Message : {exception?.Message} ；Exception line : {exception?.StackTrace}; Msg : {msg};\nStackTrace[ - ] ：{st}";
-           Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
+            Utility.IO.AppendWriteTextFile(logFullPath, logFileName, str);
         }
         public void Info(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
             string str = $"{DateTime.Now.ToString()}[ - ] > INFO : {msg};\nStackTrace[ - ] ：{st}";
-            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
+            Utility.IO.AppendWriteTextFile(logFullPath, logFileName, str);
         }
         public void Warring(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
             string str = $"{DateTime.Now.ToString()}[ - ] > WARN : {msg};\nStackTrace[ - ] ：{st}";
-            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
+            Utility.IO.AppendWriteTextFile(logFullPath, logFileName, str);
         }
         public void Fatal(string msg)
         {
             StackTrace st = new StackTrace(new StackFrame(4, true));
             string str = $"{DateTime.Now.ToString()}[ - ] > FATAL : {msg};\nStackTrace[ - ] ：{st}";
-            Utility.IO.AppendWriteTextFile(logPath, logFileName, str);
+            Utility.IO.AppendWriteTextFile(logFullPath, logFileName, str);
         }
         /// <summary>
         /// 全局异常捕获器
