@@ -141,7 +141,7 @@ namespace Cosmos
                             finMsg.Cmd = KcpProtocol.FIN;
                             SendFINMessageAsync(finMsg, data.RemoteEndPoint);
                         }
-                        GameManager.ReferencePoolManager.Despawn(netMsg);
+                        //GameManager.ReferencePoolManager.Despawn(netMsg);
                     }
                 }
             }
@@ -183,12 +183,12 @@ namespace Cosmos
                 clientPeerDict.TryGetValue(conv, out tmpPeer);
                 peerAbortHandler?.Invoke(conv);
                 NetworkPeerEventCore.Instance.Dispatch(NetworkOpCode._PeerDisconnect, tmpPeer);
-                Utility.Debug.LogWarning($"Heartbeat check ， Conv :{ conv}  is unavailable，remove peer ");
+                Utility.Debug.LogWarning($" Conv :{ conv}  is Unavailable，remove peer ");
                 GameManager.ReferencePoolManager.Despawn(tmpPeer);
             }
             catch (Exception e)
             {
-                Utility.Debug.LogError($"Heartbeat check，remove unavailable peer fail {e}");
+                Utility.Debug.LogError($"remove Unavailable peer fail {e}");
             }
         }
         bool CreateClientPeer(UdpNetMessage udpNetMsg, IPEndPoint endPoint, out UdpClientPeer peer)
