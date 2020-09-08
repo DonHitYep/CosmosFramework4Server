@@ -172,7 +172,7 @@ namespace Cosmos.Network
                 return;
             foreach (var msg in sndMsgDict.Values)
             {
-                if (msg.RecurCount >= 30)
+                if (msg.RecurCount >= 20)
                 {
                     Available = false;
                     Utility.Debug.LogInfo($"Peer Conv:{Conv }  Unavailable");
