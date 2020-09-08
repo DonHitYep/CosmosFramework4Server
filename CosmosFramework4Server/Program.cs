@@ -24,7 +24,7 @@ namespace CosmosFramework4Server
         static void Main(string[] args)
         {
             SetConsoleCtrlHandler(newDelegate, true);
-            Utility.Logger.SetHelper(new ConsoleLogHelper());
+            Utility.Logger.SetHelper(new ConsoleLoggerHelper());
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);

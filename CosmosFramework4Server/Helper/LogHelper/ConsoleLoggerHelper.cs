@@ -8,7 +8,7 @@ using Cosmos;
 
 namespace ProtocolCore
 {
-    public class ConsoleLogHelper : ILoggerHelper
+    public class ConsoleLoggerHelper : ILoggerHelper
     {
         string logFullPath;
         string logFileName = "CosmosFrameworkServer.log";
@@ -16,7 +16,7 @@ namespace ProtocolCore
         /// <summary>
         /// 默认构造，使用默认地址与默认log名称
         /// </summary>
-        public ConsoleLogHelper()
+        public ConsoleLoggerHelper()
         {
             DirectoryInfo info = Directory.GetParent(Environment.CurrentDirectory);
             string str = info.Parent.Parent.Parent.FullName;
