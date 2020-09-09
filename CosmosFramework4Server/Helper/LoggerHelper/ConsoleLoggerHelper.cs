@@ -10,19 +10,46 @@ namespace ProtocolCore
 {
     public class ConsoleLoggerHelper : ILoggerHelper
     {
-        string logFullPath;
-        string logFileName = "CosmosFrameworkServer.log";
-        string logFolderName = "Log";
+        readonly string logFullPath;
+        readonly string logFileName = "CosmosFrameworkServer.log";
+        readonly string logFolderName = "Log";
+        readonly string defaultLogPath =
+#if DEBUG
+            Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.Parent.FullName;
+#else
+            Directory.GetParent(Environment.CurrentDirectory).FullName;
+#endif
         /// <summary>
         /// 默认构造，使用默认地址与默认log名称
         /// </summary>
         public ConsoleLoggerHelper()
         {
-            DirectoryInfo info = Directory.GetParent(Environment.CurrentDirectory);
-            string str = info.Parent.Parent.Parent.FullName;
-            logFullPath = Utility.IO.CombineRelativePath(str, logFolderName);
+            logFullPath = Utility.IO.CombineRelativePath(defaultLogPath, logFolderName);
             Utility.IO.CreateFolder(logFullPath);
             System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+        }
+        public ConsoleLoggerHelper(string logName)
+        {
+            if (string.IsNullOrEmpty(logName))
+                logName = logFileName;
+            if (logName.EndsWith(".log"))
+                logFileName = logName;
+            else
+                logFileName = Utility.Text.Append(logName, ".log");
+            logFullPath = Utility.IO.CombineRelativePath(defaultLogPath, logFolderName);
+            Utility.IO.CreateFolder(logFullPath);
+        }
+        public ConsoleLoggerHelper(string logName, string logFullPath)
+        {
+            if (string.IsNullOrEmpty(logName))
+                logName = logFileName;
+            if (string.IsNullOrEmpty(logFullPath))
+            {
+                this.logFullPath = Utility.IO.CombineRelativePath(defaultLogPath, logFolderName);
+            }
+            else
+                this.logFullPath = logFileName;
+            Utility.IO.CreateFolder(this.logFullPath);
         }
         public void Error(Exception exception, string msg)
         {

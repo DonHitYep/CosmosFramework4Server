@@ -58,6 +58,20 @@ namespace Cosmos
                 StringBuilderCache.AppendFormat(format, arg);
                 return StringBuilderCache.ToString();
             }
+            public static string Append(params object[] args)
+            {
+                if (args == null)
+                {
+                    throw new ArgumentNullException("Append is invalid.");
+                }
+                StringBuilderCache.Length = 0;
+                int length = args.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    StringBuilderCache.Append(args[i]);
+                }
+                return StringBuilderCache.ToString();
+            }
             public static void ClearStringBuilder()
             {
                 StringBuilderCache.Clear();
