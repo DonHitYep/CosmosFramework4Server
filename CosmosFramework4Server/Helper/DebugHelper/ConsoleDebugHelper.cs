@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Cosmos;
-namespace ProtocolCore
+namespace AscensionGateServer
 {
     public class ConsoleDebugHelper : IDebugHelper
     {
@@ -25,11 +25,11 @@ namespace ProtocolCore
         /// <param name="context">内容，可传递对象</param>
         public void LogInfo(object msg, string msgColor, object context)
         {
-            ConsoleColor color =(ConsoleColor) int.Parse(msgColor);
+            ConsoleColor color = (ConsoleColor)int.Parse(msgColor);
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = color;
-            Console.WriteLine($"LogInfo : { msg}");
+            Console.WriteLine($"INFO: { msg}");
             Utility.Logger.Info(msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
@@ -39,7 +39,7 @@ namespace ProtocolCore
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"LogWarring : { msg}");
+            Console.WriteLine($"WARN : { msg}");
             Utility.Logger.Warring(msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
@@ -49,7 +49,7 @@ namespace ProtocolCore
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"LogError : { msg}");
+            Console.WriteLine($"ERROR : { msg}");
             Utility.Logger.Error(null, msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
@@ -62,11 +62,10 @@ namespace ProtocolCore
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"LogFatal : { msg}");
+            Console.WriteLine($"FATAL : { msg}");
             Utility.Logger.Warring(msg.ToString());
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
         }
-
     }
 }
