@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Cosmos;
-namespace AscensionGateServer
+namespace ProtocolCore
 {
     public class ConsoleDebugHelper : IDebugHelper
     {

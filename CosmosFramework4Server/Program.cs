@@ -28,7 +28,7 @@ namespace CosmosFramework4Server
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
-            GameManager.External.GetModule<PeerManager>();
+            GameManager.External.GetModule<ClientPeerManager>();
             Task.Run(GameManagerAgent.Instance.OnRefresh);
             while (true) { }
          //   Task.Run(AsyncCoroutine.Instance.Start);

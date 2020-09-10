@@ -11,7 +11,7 @@ namespace Cosmos.Network
     /// <summary>
     /// 此模块为客户端网络管理类
     /// </summary>
-    public sealed class NetworkManager : Module<NetworkManager>
+    public sealed partial class NetworkManager : Module<NetworkManager>
     {
         string serverIP;
         int serverPort;

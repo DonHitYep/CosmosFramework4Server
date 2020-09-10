@@ -15,7 +15,7 @@ namespace Cosmos.Network
         /// <summary>
         /// 会话ID
         /// </summary>
-        public uint Conv { get; private set; }
+        public long Conv { get; private set; }
         /// <summary>
         /// 分配的endPoint
         /// </summary>
@@ -60,7 +60,7 @@ namespace Cosmos.Network
         /// 这里函数指针指向service的sendMessage
         /// </summary>
         Action<INetworkMessage> sendMessageHandler;
-        Action<uint> abortPeerHandler;
+        Action<long> abortPeerHandler;
         public UdpClientPeer()
         {
             sndMsgDict = new ConcurrentDictionary<uint, UdpNetMessage>();
@@ -81,7 +81,7 @@ namespace Cosmos.Network
         {
             sendMessageHandler?.Invoke(netMsg);
         }
-        public void SetValue(Action<INetworkMessage> sendMsgCallback, Action<uint> abortPeerCallback, uint conv, IPEndPoint endPoint)
+        public void SetValue(Action<INetworkMessage> sendMsgCallback, Action<long> abortPeerCallback, long conv, IPEndPoint endPoint)
         {
             this.Conv = conv;
             this.PeerEndPoint = endPoint;
@@ -110,6 +110,7 @@ namespace Cosmos.Network
                         if (sndMsgDict.TryRemove(netMsg.SN, out tmpMsg))
                         {
                             Utility.Debug.LogInfo($" Conv :{Conv}，Receive KCP_ACK Message");
+                            GameManager.ReferencePoolManager.Despawn(tmpMsg);
                         }
                         else
                         {
@@ -120,12 +121,14 @@ namespace Cosmos.Network
                     break;
                 case KcpProtocol.MSG:
                     {
+#if DEBUG
                         Utility.Debug.LogInfo($"Conv : {Conv} ,Receive KCP_MSG ：{netMsg},消息体:{Utility.Converter.GetString(netMsg.ServiceMsg)}");
+#endif
                         //生成一个ACK报文，并返回发送
                         var ack = UdpNetMessage.ConvertToACK(netMsg);
                         //这里需要发送ACK报文
                         sendMessageHandler?.Invoke(ack);
-                        if (netMsg.OperationCode == NetworkOpCode._Heartbeat)
+                        if (netMsg.OperationCode == InnerOpCode._Heartbeat)
                         {
                             Heartbeat.OnRenewal();
                             Utility.Debug.LogInfo($" Send KCP_ACK Message，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
@@ -155,7 +158,6 @@ namespace Cosmos.Network
                     }
                     break;
             }
-            //GameManager.ReferencePoolManager.Despawn(netMsg);
         }
         /// <summary>
         /// 轮询更新，创建Peer对象时候将此方法加入监听；
@@ -263,11 +265,15 @@ namespace Cosmos.Network
             }
             HandleSN = netMsg.SN;
             NetworkMsgEventCore.Instance.Dispatch(netMsg.OperationCode, netMsg);
+#if DEBUG
             Utility.Debug.LogWarning($"Peer Conv:{Conv}， HandleMsgSN : {netMsg.ToString()}");
+#endif
             UdpNetMessage nxtNetMsg;
             if (rcvMsgDict.TryRemove(HandleSN + 1, out nxtNetMsg))
             {
+#if DEBUG
                 Utility.Debug.LogInfo($"HandleMsgSN Next KCP_MSG : {netMsg.ToString()}");
+#endif
                 HandleMsgSN(nxtNetMsg);
             }
         }

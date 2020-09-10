@@ -8,7 +8,7 @@ namespace Cosmos
     /// 服务端；
     /// 网络并发Peer事件Core，Key为ushort码，表示 NetOpCode中的码；值为IRemotePeer
     /// </summary>
-    public class NetworkPeerEventCore:ConcurrentEventCore<ushort,IRemotePeer, NetworkPeerEventCore>
+    internal class NetworkPeerEventCore:ConcurrentEventCore<ushort,IRemotePeer, NetworkPeerEventCore>
     {
     }
 }

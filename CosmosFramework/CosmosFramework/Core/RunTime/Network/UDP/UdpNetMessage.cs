@@ -20,7 +20,7 @@ namespace Cosmos
         /// 和TCP的 conv一样，通信双方需保证 conv相同，
         /// 相互的数据包才能够被接受。conv唯一标识一个会话，但通信双方可以同时存在多个会话。
         /// </summary>
-        public uint Conv { get; set; }
+        public long Conv { get; set; }
         /// <summary>
         /// Kcp协议类型:
         /// 用来区分分片的作用。
@@ -81,7 +81,7 @@ namespace Cosmos
         /// </summary>
         /// <param name="conv">会话ID</param>
         /// <param name="cmd">协议ID</param>
-        public UdpNetMessage(uint conv, byte cmd)
+        public UdpNetMessage(long conv, byte cmd)
         {
             ServiceMsgLength = 0;
             Conv = conv;
@@ -95,7 +95,7 @@ namespace Cosmos
         /// <param name="cmd">协议ID</param>
         /// <param name="opCode">操作码</param>
         /// <param name="message">消息内容</param>
-        public UdpNetMessage(uint conv, uint sn, byte cmd, ushort opCode, byte[] message)
+        public UdpNetMessage(long conv, uint sn, byte cmd, ushort opCode, byte[] message)
         {
             if (message == null)
                 ServiceMsgLength = 0;
@@ -117,7 +117,7 @@ namespace Cosmos
         /// <param name="sn">msgID</param>
         /// <param name="cmd">协议</param>
         /// <param name="opCode">前后端消息ID</param>
-        public UdpNetMessage(uint conv, uint snd_una, uint sn, ushort cmd, ushort opCode)
+        public UdpNetMessage(long conv, uint snd_una, uint sn, ushort cmd, ushort opCode)
         {
             Conv = conv;
             Snd_una = snd_una;
@@ -147,16 +147,12 @@ namespace Cosmos
             else
                 ServiceMsgLength = (ushort)message.Length;
             Conv = udpNetMsg.Conv;
-            SN = udpNetMsg.Conv;
+            SN = udpNetMsg.SN;
             Cmd = udpNetMsg.Cmd;
             ServiceMsg = message;
             Rcv_nxt = udpNetMsg.SN;
             Snd_nxt = SN + 1;
             OperationCode = udpNetMsg.OperationCode;
-        }
-        public bool CacheDecodeBuffer(byte[] buffer)
-        {
-            return DecodeMessage(buffer);
         }
         /// <summary>
         /// 解析UDP数据报文
@@ -172,7 +168,7 @@ namespace Cosmos
             if (buffer.Length >= 2)
             {
                 ServiceMsgLength = BitConverter.ToUInt16(buffer, 0);
-                if (buffer.Length == ServiceMsgLength + 34)
+                if (buffer.Length == ServiceMsgLength + 38)
                 {
                     IsFull = true;
                 }
@@ -182,18 +178,18 @@ namespace Cosmos
                 IsFull = false;
                 return false;
             }
-            Conv = BitConverter.ToUInt32(buffer, 2);
-            Cmd = BitConverter.ToUInt16(buffer, 6);
-            TS = BitConverter.ToInt64(buffer, 8);
-            SN = BitConverter.ToUInt32(buffer, 16);
-            Snd_una = BitConverter.ToUInt32(buffer, 20);
-            Snd_nxt = BitConverter.ToUInt32(buffer, 24);
-            Rcv_nxt = BitConverter.ToUInt32(buffer, 28);
-            OperationCode = BitConverter.ToUInt16(buffer, 32);
+            Conv = BitConverter.ToInt64(buffer, 2);
+            Cmd = BitConverter.ToUInt16(buffer, 10);
+            TS = BitConverter.ToInt64(buffer, 12);
+            SN = BitConverter.ToUInt32(buffer, 20);
+            Snd_una = BitConverter.ToUInt32(buffer, 24);
+            Snd_nxt = BitConverter.ToUInt32(buffer, 28);
+            Rcv_nxt = BitConverter.ToUInt32(buffer, 32);
+            OperationCode = BitConverter.ToUInt16(buffer, 36);
             if (Cmd == KcpProtocol.MSG)
             {
                 ServiceMsg = new byte[ServiceMsgLength];
-                Array.Copy(buffer, 34, ServiceMsg, 0, ServiceMsgLength);
+                Array.Copy(buffer, 38, ServiceMsg, 0, ServiceMsgLength);
             }
             return true;
         }
@@ -205,7 +201,13 @@ namespace Cosmos
         {
             if (Cmd == KcpProtocol.ACK)
                 ServiceMsgLength = 0;
-            byte[] data = new byte[34 + ServiceMsgLength];
+            int srvMsgLen = 0;
+            if (ServiceMsg != null)
+            {
+                srvMsgLen = ServiceMsg.Length;
+                ServiceMsgLength = Convert.ToUInt16(srvMsgLen);
+            }
+            byte[] data = new byte[38 + ServiceMsgLength];
             byte[] len = BitConverter.GetBytes(ServiceMsgLength);
             byte[] conv = BitConverter.GetBytes(Conv);
             byte[] cmd = BitConverter.GetBytes(Cmd);
@@ -216,18 +218,18 @@ namespace Cosmos
             byte[] rcv_nxt = BitConverter.GetBytes(Rcv_nxt);
             byte[] opCode = BitConverter.GetBytes(OperationCode);
             Array.Copy(len, 0, data, 0, 2);
-            Array.Copy(conv, 0, data, 2, 4);
-            Array.Copy(cmd, 0, data, 6, 2);
-            Array.Copy(ts, 0, data, 8, 8);
-            Array.Copy(sn, 0, data, 16, 4);
-            Array.Copy(snd_una, 0, data, 20, 4);
-            Array.Copy(snd_nxt, 0, data, 24, 4);
-            Array.Copy(rcv_nxt, 0, data, 28, 4);
-            Array.Copy(opCode, 0, data, 32, 2);
+            Array.Copy(conv, 0, data, 2, 8);
+            Array.Copy(cmd, 0, data, 10, 2);
+            Array.Copy(ts, 0, data, 12, 8);
+            Array.Copy(sn, 0, data, 20, 4);
+            Array.Copy(snd_una, 0, data, 24, 4);
+            Array.Copy(snd_nxt, 0, data, 28, 4);
+            Array.Copy(rcv_nxt, 0, data, 32, 4);
+            Array.Copy(opCode, 0, data, 36, 2);
             //如果不是ACK报文，则追加数据
             if (Cmd == KcpProtocol.MSG)
                 if (ServiceMsg != null)//空包保护
-                    Array.Copy(ServiceMsg, 0, data, 34,ServiceMsg.Length);
+                    Array.Copy(ServiceMsg, 0, data, 38, ServiceMsg.Length);
             Buffer = data;
             return data;
         }
@@ -272,30 +274,45 @@ namespace Cosmos
         /// </summary>
         /// <param name="conv">会话ID</param>
         /// <returns></returns>
-        public static UdpNetMessage HeartbeatMessage(uint conv)
+        public static UdpNetMessage HeartbeatMessage(long conv)
         {
             var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.ACK;
             udpNetMsg.ServiceMsgLength = 0;
-            udpNetMsg.OperationCode = NetworkOpCode._Heartbeat;
+            udpNetMsg.OperationCode = InnerOpCode._Heartbeat;
             return udpNetMsg;
         }
-        public static UdpNetMessage DefaultMessageAsync(uint conv)
+        public static UdpNetMessage EncodeMessage(long conv)
         {
-            var reuslut = DefaultMessage(conv);
-            return reuslut.Result;
+            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            udpNetMsg.Conv = conv;
+            udpNetMsg.Cmd = KcpProtocol.MSG;
+            udpNetMsg.ServiceMsgLength = 0;
+            udpNetMsg.OperationCode = 0;
+            return udpNetMsg;
         }
-        static async Task<UdpNetMessage> DefaultMessage(uint conv)
+        /// <summary>
+        /// 编码默认消息
+        /// </summary>
+        /// <param name="opCode">操作码</param>
+        /// <param name="message">二进制业务报文</param>
+        /// <returns>编码成功后的数据</returns>
+        public static UdpNetMessage EncodeMessage(ushort opCode, byte[] message)
         {
-            return await Task.Run(() =>
+            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            udpNetMsg.Cmd = KcpProtocol.MSG;
+            udpNetMsg.ServiceMsgLength = 0;
+            udpNetMsg.OperationCode = opCode;
+            udpNetMsg.ServiceMsg = message;
+            udpNetMsg.EncodeMessage();
+            return udpNetMsg;
+        }
+        public static async Task<UdpNetMessage> EncodeMessageAsync(long conv)
+        {
+            return await Task.Run<UdpNetMessage>(() =>
            {
-               var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
-               udpNetMsg.Conv = conv;
-               udpNetMsg.Cmd = KcpProtocol.MSG;
-               udpNetMsg.ServiceMsgLength = 0;
-               udpNetMsg.OperationCode = 0;
-               return udpNetMsg;
+               return EncodeMessage(conv);
            });
         }
     }

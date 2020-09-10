@@ -8,7 +8,7 @@ namespace Cosmos
 {
     public class TcpNetMessage : INetworkMessage
     {
-        public uint Conv { get; set; }
+        public long Conv { get; set; }
 
         public bool DecodeMessage(byte[] buffer)
         {

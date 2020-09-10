@@ -24,23 +24,24 @@ namespace Cosmos
         /// <summary>
         /// 销毁一个peer事件处理者
         /// </summary>
-        Action<uint> peerAbortHandler;
-        public event Action<uint> PeerAbortHandler
+        Action<long> peerAbortHandler;
+        public event Action<long> PeerAbortHandler
         {
             add { peerAbortHandler += value; }
             remove { peerAbortHandler -= value; }
         }
-        ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
+        //ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
         public override void OnInitialization()
         {
             base.OnInitialization();
         }
         public override async void SendMessageAsync(INetworkMessage netMsg, IPEndPoint endPoint)
         {
-            UdpClientPeer peer;
-            if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
+            IRemotePeer tmpPeer;
+            if (GameManager.NetworkManager.TryGetValue(netMsg.Conv, out tmpPeer))
             {
                 UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
+                UdpClientPeer peer = tmpPeer as UdpClientPeer;
                 var result = peer.EncodeMessage(ref udpNetMsg);
                 if (result)
                 {
@@ -66,9 +67,10 @@ namespace Cosmos
         }
         public override async void SendMessageAsync(INetworkMessage netMsg)
         {
-            UdpClientPeer peer;
-            if (clientPeerDict.TryGetValue(netMsg.Conv, out peer))
+            IRemotePeer tmpPeer;
+            if (GameManager.NetworkManager.TryGetValue(netMsg.Conv, out tmpPeer))
             {
+                UdpClientPeer peer = tmpPeer as UdpClientPeer;
                 UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
                 var result = peer.EncodeMessage(ref udpNetMsg);
                 if (result)
@@ -103,9 +105,11 @@ namespace Cosmos
                 if (awaitHandle.TryDequeue(out data))
                 {
                     UdpNetMessage netMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
-                    netMsg.CacheDecodeBuffer(data.Buffer);
+                    netMsg.DecodeMessage(data.Buffer);
+#if DEBUG
                     if (netMsg.Cmd == KcpProtocol.MSG)
                         Utility.Debug.LogInfo($" OnRefresh KCP_MSG：{netMsg} ;ServiceMessage : {Utility.Converter.GetString(netMsg.ServiceMsg)},TS:{netMsg.TS}");
+#endif
                     if (netMsg.IsFull)
                     {
                         if (netMsg.Conv == 0)
@@ -115,17 +119,19 @@ namespace Cosmos
                             UdpClientPeer peer;
                             CreateClientPeer(netMsg, data.RemoteEndPoint, out peer);
                         }
-                        UdpClientPeer tmpPeer;
-                        if (clientPeerDict.TryGetValue(netMsg.Conv, out tmpPeer))
+                        IRemotePeer rPeer;
+                        if (GameManager.NetworkManager .TryGetValue(netMsg.Conv, out rPeer))
                         {
+                            UdpClientPeer tmpPeer = rPeer as UdpClientPeer;
                             //如果peer失效，则移除
                             if (!tmpPeer.Available)
                             {
                                 refreshHandler -= tmpPeer.OnRefresh;
-                                UdpClientPeer abortedPeer;
-                                clientPeerDict.TryRemove(netMsg.Conv, out abortedPeer);
+                                IRemotePeer abortedPeer;
+                                GameManager.NetworkManager.TryRemove(netMsg.Conv,out abortedPeer);
+                                //UdpClientPeer abortedUdpPeer = abortedPeer as UdpClientPeer;
                                 peerAbortHandler?.Invoke(abortedPeer.Conv);
-                                NetworkPeerEventCore.Instance.Dispatch(NetworkOpCode._PeerDisconnect, tmpPeer);
+                                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._PeerDisconnect, tmpPeer);
                                 GameManager.ReferencePoolManager.Despawn(abortedPeer);
                                 Utility.Debug.LogInfo($"Abort  Unavailable Peer，conv：{netMsg.Conv}:");
                             }
@@ -137,11 +143,10 @@ namespace Cosmos
                         else
                         {
                             //发送终结命令；
-                            UdpNetMessage finMsg = UdpNetMessage.DefaultMessageAsync(netMsg.Conv);
+                            UdpNetMessage finMsg = UdpNetMessage.EncodeMessage(netMsg.Conv);
                             finMsg.Cmd = KcpProtocol.FIN;
                             SendFINMessageAsync(finMsg, data.RemoteEndPoint);
                         }
-                        //GameManager.ReferencePoolManager.Despawn(netMsg);
                     }
                 }
             }
@@ -175,14 +180,14 @@ namespace Cosmos
         /// 作为参数传入peer；
         /// </summary>
         /// <param name="conv">会话ID</param>
-        void AbortUnavilablePeer(uint conv)
+        void AbortUnavilablePeer(long conv)
         {
             try
             {
-                UdpClientPeer tmpPeer;
-                clientPeerDict.TryGetValue(conv, out tmpPeer);
+                IRemotePeer tmpPeer;
+                GameManager.NetworkManager.TryGetValue(conv, out tmpPeer);
                 peerAbortHandler?.Invoke(conv);
-                NetworkPeerEventCore.Instance.Dispatch(NetworkOpCode._PeerDisconnect, tmpPeer);
+                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._PeerDisconnect, tmpPeer);
                 Utility.Debug.LogWarning($" Conv :{ conv}  is Unavailable，remove peer ");
                 GameManager.ReferencePoolManager.Despawn(tmpPeer);
             }
@@ -195,14 +200,13 @@ namespace Cosmos
         {
             peer = default;
             bool result = false;
-            if (!clientPeerDict.TryGetValue(udpNetMsg.Conv, out peer))
+            if (!GameManager.NetworkManager.ContainsKey(udpNetMsg.Conv))
             {
                 peer = GameManager.ReferencePoolManager.Spawn<UdpClientPeer>();
                 peer.SetValue(SendMessageAsync, AbortUnavilablePeer, udpNetMsg.Conv, endPoint);
-                result = clientPeerDict.TryAdd(udpNetMsg.Conv, peer);
+                result = GameManager.NetworkManager.TryAdd(udpNetMsg.Conv, peer);
                 refreshHandler += peer.OnRefresh;
-                Utility.Debug.LogInfo($"Create ClientPeer  conv : {udpNetMsg.Conv}; PeerCount : {clientPeerDict.Count}");
-                NetworkPeerEventCore.Instance.Dispatch(NetworkOpCode._PeerConnect, peer);
+                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._PeerConnect, peer);
             }
             return result;
         }

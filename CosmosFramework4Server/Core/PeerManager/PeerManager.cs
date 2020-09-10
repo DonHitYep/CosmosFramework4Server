@@ -1,21 +1,30 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using Cosmos;
-namespace CosmosFramework4Server
+using Cosmos.Network;
+
+namespace Cosmos
 {
-    public class PeerManager : Module<PeerManager>
+    public class ClientPeerManager : Module<ClientPeerManager>
     {
+
         public override void OnInitialization()
         {
             Utility.Debug.LogInfo("PeerManager OnInitialization");
             NetworkMsgEventCore.Instance.AddEventListener(10, PeerHandler);
-            NetworkPeerEventCore.Instance.AddEventListener(NetworkOpCode._PeerConnect, OnPeerConnectHandler);
-            NetworkPeerEventCore.Instance.AddEventListener(NetworkOpCode._PeerDisconnect, OnPeerDisConnectHandler);
+            GameManager.NetworkManager.PeerConnectEvent += OnPeerConnectHandler;
+            GameManager.NetworkManager.PeerDisconnectEvent+=OnPeerDisConnectHandler;
         }
         void PeerHandler(INetworkMessage netMsg)
         {
-            Utility.Debug.LogWarning($"PeerManager接收到网络广播事件:{netMsg.ToString()}；消息体：{Utility.Converter.GetString((netMsg as UdpNetMessage).ServiceMsg)}"); 
+            UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
+            Utility.Debug.LogWarning($"PeerManager接收到网络广播事件:{netMsg.ToString()}；消息体：{Utility.Converter.GetString(udpNetMsg.ServiceMsg)}");
+            string str = "锟斤拷666";
+            var data = Utility.Encode.ConvertToByte(str);
+            UdpNetMessage msg = new UdpNetMessage(udpNetMsg.Conv, 0, KcpProtocol.MSG, 10, data);
+            GameManager.NetworkManager.SendNetworkMessage(msg);
         }
         void OnPeerConnectHandler(IRemotePeer peer)
         {
@@ -25,7 +34,5 @@ namespace CosmosFramework4Server
         {
             Utility.Debug.LogWarning($"Peer disconnect 断线 , conv :{ peer.Conv}");
         }
-
-
     }
 }
