@@ -308,6 +308,17 @@ namespace Cosmos
             udpNetMsg.EncodeMessage();
             return udpNetMsg;
         }
+        public static UdpNetMessage EncodeMessage(long conv,ushort opCode, byte[] message)
+        {
+            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            udpNetMsg.Conv = conv;
+            udpNetMsg.Cmd = KcpProtocol.MSG;
+            udpNetMsg.ServiceMsgLength = 0;
+            udpNetMsg.OperationCode = opCode;
+            udpNetMsg.ServiceMsg = message;
+            udpNetMsg.EncodeMessage();
+            return udpNetMsg;
+        }
         public static async Task<UdpNetMessage> EncodeMessageAsync(long conv)
         {
             return await Task.Run<UdpNetMessage>(() =>

@@ -19,6 +19,7 @@ namespace Cosmos.Network
         int clientPort;
         INetworkService service;
         IPEndPoint serverEndPoint;
+        INetMessageHelper netMessageHelper;
         public IPEndPoint ServerEndPoint
         {
             get

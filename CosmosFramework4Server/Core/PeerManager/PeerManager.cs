@@ -23,7 +23,7 @@ namespace Cosmos
             Utility.Debug.LogWarning($"PeerManager接收到网络广播事件:{netMsg.ToString()}；消息体：{Utility.Converter.GetString(udpNetMsg.ServiceMsg)}");
             string str = "锟斤拷666";
             var data = Utility.Encode.ConvertToByte(str);
-            UdpNetMessage msg = new UdpNetMessage(udpNetMsg.Conv, 0, KcpProtocol.MSG, 10, data);
+            UdpNetMessage msg = UdpNetMessage.EncodeMessage(udpNetMsg.Conv,10, data);
             GameManager.NetworkManager.SendNetworkMessage(msg);
         }
         void OnPeerConnectHandler(IRemotePeer peer)
