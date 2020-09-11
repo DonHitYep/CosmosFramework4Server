@@ -118,15 +118,14 @@ namespace Cosmos
             /// 若文件为空，则自动创建；
             /// 此方法为text类型文件写入；
             /// </summary>
-            /// <param name="relativePath">相对路径</param>
+            /// <param name="fullPath">完整路径</param>
             /// <param name="fileName">文件名</param>
             /// <param name="info">写入的信息</param>
-            public static void AppendWriteTextFile(string relativePath, string fileName, string info)
+            public static void AppendWriteTextFile(string fullPath, string fileName, string info)
             {
-                string absoluteFullpath = Utility.IO.CombineRelativeFilePath(relativePath);
-                if (!Directory.Exists(absoluteFullpath))
-                    Directory.CreateDirectory(absoluteFullpath);
-                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, absoluteFullpath), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                if (!Directory.Exists(fullPath))
+                    Directory.CreateDirectory(fullPath);
+                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, fullPath), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     stream.Position = stream.Length;
                     using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
