@@ -154,6 +154,9 @@ namespace Cosmos.Network
                     {
                         //结束建立连接Cmd，这里需要谨慎考虑；
                         Utility.Debug.LogInfo($"Conv : {Conv} ,Receive KCP_FIN Message");
+                        var ack = UdpNetMessage.ConvertToACK(netMsg);
+                        //这里需要发送ACK报文
+                        sendMessageHandler?.Invoke(ack);
                         AbortConnection();
                     }
                     break;

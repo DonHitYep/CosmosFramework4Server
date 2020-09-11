@@ -131,7 +131,7 @@ namespace Cosmos
                                 GameManager.NetworkManager.TryRemove(netMsg.Conv,out abortedPeer);
                                 //UdpClientPeer abortedUdpPeer = abortedPeer as UdpClientPeer;
                                 peerAbortHandler?.Invoke(abortedPeer.Conv);
-                                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._PeerDisconnect, tmpPeer);
+                                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._Disconnect, tmpPeer);
                                 GameManager.ReferencePoolManager.Despawn(abortedPeer);
                                 Utility.Debug.LogInfo($"Abort  Unavailable Peer，conv：{netMsg.Conv}:");
                             }
@@ -187,7 +187,7 @@ namespace Cosmos
                 IRemotePeer tmpPeer;
                 GameManager.NetworkManager.TryGetValue(conv, out tmpPeer);
                 peerAbortHandler?.Invoke(conv);
-                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._PeerDisconnect, tmpPeer);
+                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._Disconnect, tmpPeer);
                 Utility.Debug.LogWarning($" Conv :{ conv}  is Unavailable，remove peer ");
                 GameManager.ReferencePoolManager.Despawn(tmpPeer);
             }
@@ -206,7 +206,7 @@ namespace Cosmos
                 peer.SetValue(SendMessageAsync, AbortUnavilablePeer, udpNetMsg.Conv, endPoint);
                 result = GameManager.NetworkManager.TryAdd(udpNetMsg.Conv, peer);
                 refreshHandler += peer.OnRefresh;
-                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._PeerConnect, peer);
+                NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._Connect, peer);
             }
             return result;
         }
