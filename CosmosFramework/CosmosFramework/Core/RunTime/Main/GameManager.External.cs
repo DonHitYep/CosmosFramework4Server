@@ -21,7 +21,7 @@ namespace Cosmos
         /// </summary>
         /// <typeparam name="TModule">实现模块功能的类对象</typeparam>
         /// <returns>获取的模块</returns>
-        public static TModule Module<TModule>()
+        public static TModule OuterModule<TModule>()
             where TModule : Module<TModule>, new()
         {
             Type type = typeof(TModule);
@@ -50,6 +50,14 @@ namespace Cosmos
                         GameManager.Instance.refreshHandler += module.OnRefresh;
                     }
                 }
+            }
+            PrepareOuterModule();
+        }
+        static void PrepareOuterModule()
+        {
+            foreach (var module in outerModuleDict.Values)
+            {
+                module.OnPreparatory();
             }
         }
     }

@@ -138,7 +138,7 @@ namespace Cosmos
             /// 通过特性获取对象实体；
             /// </summary>
             /// <typeparam name="T">目标特性</typeparam>
-            /// <param name="type">目标类型</param>
+            /// <param name="type">基类</param>
             /// <returns>生成的对象</returns>
             public static object GetInstanceByAttribute<T>(Type type)
                 where T : Attribute
@@ -160,7 +160,7 @@ namespace Cosmos
             /// 通过特性获取对象实体数组；
             /// </summary>
             /// <typeparam name="T">目标特性</typeparam>
-            /// <param name="type">目标类型</param>
+            /// <param name="type">基类</param>
             /// <returns>生成的对象数组</returns>
             public static object[] GetInstancesByAttribute<T>(Type type)
                 where T : Attribute
@@ -170,7 +170,7 @@ namespace Cosmos
                 int length = types.Length;
                 for (int i = 0; i < length; i++)
                 {
-                    if (types[i].GetCustomAttribute<T>() != null)
+                    if (types[i].GetCustomAttributes<T>() != null)
                     {
                         set.Add(GetTypeInstance(types[i]));
                     }
@@ -178,7 +178,7 @@ namespace Cosmos
                 return set.ToArray();
             }
             /// <summary>
-            /// 获取某类型的所有派生类数组
+            /// 获取某类型的所有派生类数组；
             /// </summary>
             /// <param name="type">基类</param>
             /// <returns>非抽象派生类</returns>
