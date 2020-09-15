@@ -37,6 +37,7 @@ namespace ProtocolCore
             else
                 logFileName = Utility.Text.Append(logName, ".log");
             logFullPath = Utility.IO.CombineRelativePath(defaultLogPath, logFolderName);
+            System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
             Utility.IO.CreateFolder(logFullPath);
         }
         public ConsoleLoggerHelper(string logName, string logFullPath)
