@@ -5,11 +5,11 @@ using System.Text;
 using Cosmos;
 using Cosmos.Network;
 
-namespace Cosmos
+namespace CosmosServer
 {
+    [OuterModule]
     public class ClientPeerManager : Module<ClientPeerManager>
     {
-
         public override void OnInitialization()
         {
             Utility.Debug.LogInfo("PeerManager OnInitialization");

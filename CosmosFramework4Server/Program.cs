@@ -6,7 +6,7 @@ using ProtocolCore;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace CosmosFramework4Server
+namespace CosmosServer
 {
     class Program
     {
@@ -28,7 +28,7 @@ namespace CosmosFramework4Server
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
-            GameManager.External.GetModule<ClientPeerManager>();
+            GameManager.InitOuterModule(typeof(Program));
             Task.Run(GameManagerAgent.Instance.OnRefresh);
             while (true) { }
          //   Task.Run(AsyncCoroutine.Instance.Start);
