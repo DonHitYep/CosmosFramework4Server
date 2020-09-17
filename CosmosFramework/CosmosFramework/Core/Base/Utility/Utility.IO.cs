@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace Cosmos
@@ -134,6 +135,32 @@ namespace Cosmos
                         writer.Close();
                         stream.Close();
                     }
+                }
+            }
+            /// <summary>
+            /// 写入二进制
+            /// </summary>
+            /// <param name="fileFullPath">完整文件路径</param>
+            /// <param name="context">内容</param>
+            public static void WriterFormattedBinary(string fileFullPath, object context)
+            {
+                using (FileStream stream = new FileStream(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, context);
+                }
+            }
+            /// <summary>
+            /// 读取二进制
+            /// </summary>
+            /// <param name="fileFullPath">完整文件路径</param>
+            /// <returns>内容</returns>
+            public static object ReadFormattedBinary(string fileFullPath)
+            {
+                using (FileStream stream = new FileStream(fileFullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    return formatter.Deserialize(stream);
                 }
             }
         }
