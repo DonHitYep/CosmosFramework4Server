@@ -46,7 +46,7 @@ namespace Cosmos
                     if (result)
                     {
                         module.OnInitialization();
-                        Utility.Debug.LogInfo($"生成新模块 , Module :{module.ToString()} ");
+                        Utility.Debug.LogInfo($"Module :{module.ToString()} instanced  ");
                         GameManager.Instance.refreshHandler += module.OnRefresh;
                     }
                 }

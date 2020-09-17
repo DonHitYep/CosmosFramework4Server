@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace CosmosServer
 {
-    class Program
+    class CosmosServer
     {
         public delegate bool ControlCtrlDelegate(int CtrlType);
         [DllImport("kernel32.dll")]
@@ -28,7 +28,7 @@ namespace CosmosServer
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
-            GameManager.InitOuterModule(typeof(Program));
+            GameManager.InitOuterModule(typeof(CosmosServer));
             Task.Run(GameManagerAgent.Instance.OnRefresh);
             while (true) { }
          //   Task.Run(AsyncCoroutine.Instance.Start);
