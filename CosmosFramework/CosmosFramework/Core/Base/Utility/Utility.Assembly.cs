@@ -162,7 +162,7 @@ namespace Cosmos
             /// <typeparam name="T">目标特性</typeparam>
             /// <typeparam name="K">基类，new()约束</typeparam>
             /// <returns>生成的对象</returns>
-            public static object GetInstanceByAttribute<T, K>()
+            public static K GetInstanceByAttribute<T, K>()
                 where T : Attribute
                 where K : class
             {
