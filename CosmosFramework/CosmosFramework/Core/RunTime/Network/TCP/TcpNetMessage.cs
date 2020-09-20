@@ -9,6 +9,7 @@ namespace Cosmos
     public class TcpNetMessage : INetworkMessage
     {
         public long Conv { get; set; }
+        public ushort OperationCode { get; set; }
 
         public byte[] ServiceMsg { get; private set; }
 

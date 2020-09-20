@@ -56,14 +56,18 @@ namespace Cosmos
                 UnavailableHandler?.Invoke();
                 return;
             }
+#if DEBUG
             Utility.Debug.LogInfo($"Heartbeat check ：Conv : {Conv} ; currentRecurCount  : {currentRecurCount}");
+#endif
         }
         public void OnRenewal()
         {
             long now = Utility.Time.SecondNow();
             LatestHeartbeatTime = now + HeartbeatInterval;
             currentRecurCount = 0;
+#if DEBUG
             Utility.Debug.LogInfo($"Heartbeat receive ：Conv : {Conv} ");
+#endif
         }
         public void OnDeactive()
         {

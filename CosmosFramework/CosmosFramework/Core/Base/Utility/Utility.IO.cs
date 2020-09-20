@@ -119,14 +119,15 @@ namespace Cosmos
             /// 若文件为空，则自动创建；
             /// 此方法为text类型文件写入；
             /// </summary>
-            /// <param name="fullPath">完整路径</param>
+            /// <param name="relativePath">相对路径</param>
             /// <param name="fileName">文件名</param>
             /// <param name="info">写入的信息</param>
-            public static void AppendWriteTextFile(string fullPath, string fileName, string info)
+            public static void AppendWriteTextFile(string relativePath, string fileName, string info)
             {
-                if (!Directory.Exists(fullPath))
-                    Directory.CreateDirectory(fullPath);
-                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, fullPath), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                string absoluteFullpath = Utility.IO.CombineRelativeFilePath(relativePath);
+                if (!Directory.Exists(absoluteFullpath))
+                    Directory.CreateDirectory(absoluteFullpath);
+                using (FileStream stream = new FileStream(Utility.IO.CombineRelativeFilePath(fileName, absoluteFullpath), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     stream.Position = stream.Length;
                     using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
@@ -142,12 +143,16 @@ namespace Cosmos
             /// </summary>
             /// <param name="fileFullPath">完整文件路径</param>
             /// <param name="context">内容</param>
-            public static void WriterFormattedBinary(string fileFullPath, object context)
+            /// <returns>是否写入成功</returns>
+            public static bool WriterFormattedBinary(string fileFullPath, object context)
             {
+                if (!File.Exists(fileFullPath))
+                    return false;
                 using (FileStream stream = new FileStream(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     BinaryFormatter formatter = new BinaryFormatter();
                     formatter.Serialize(stream, context);
+                    return true;
                 }
             }
             /// <summary>
@@ -157,11 +162,25 @@ namespace Cosmos
             /// <returns>内容</returns>
             public static object ReadFormattedBinary(string fileFullPath)
             {
+                if (!File.Exists(fileFullPath))
+                    return null;
                 using (FileStream stream = new FileStream(fileFullPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     BinaryFormatter formatter = new BinaryFormatter();
                     return formatter.Deserialize(stream);
                 }
+            }
+            /// <summary>
+            /// 清空text类型的文本
+            /// </summary>
+            /// <param name="fileFullPath">完整文件路径</param>
+            /// <returns>是否写入成功</returns>
+            public static bool ClearTextContext(string fileFullPath)
+            {
+                if (!File.Exists(fileFullPath))
+                    return false;
+                File.WriteAllText(fileFullPath, string.Empty);
+                return true;
             }
         }
     }

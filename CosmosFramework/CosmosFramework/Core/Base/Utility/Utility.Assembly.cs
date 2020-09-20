@@ -34,7 +34,7 @@ namespace Cosmos
                 return string.IsNullOrEmpty(name) ? typeName : Utility.Text.Format(typeName, name);
             }
             /// <summary>
-            ///   /// 反射工具，得到反射类的对象；
+            /// 反射工具，得到反射类的对象；
             /// 不可反射Mono子类，被反射对象必须是具有无参公共构造
             /// 在IOS上受限，发布IOS需要谨慎
             /// </summary>

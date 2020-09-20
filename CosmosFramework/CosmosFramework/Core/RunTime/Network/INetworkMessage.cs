@@ -8,9 +8,11 @@ namespace Cosmos
     public interface INetworkMessage
     {
         long Conv { get; }
+        ushort OperationCode { get; }
         byte[] EncodeMessage();
         bool DecodeMessage(byte[] buffer);
         byte[] ServiceMsg { get; }
         byte[] GetBuffer();
+
     }
 }

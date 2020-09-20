@@ -47,6 +47,10 @@ namespace Cosmos.Network
         {
             service?.OnRefresh();
         }
+        /// <summary>
+        /// 本质是异步发送
+        /// </summary>
+        /// <param name="netMsg">消息对象</param>
         public void SendNetworkMessage(INetworkMessage netMsg)
         {
             service.SendMessageAsync(netMsg);

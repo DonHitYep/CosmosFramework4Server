@@ -233,6 +233,10 @@ namespace Cosmos
             Buffer = data;
             return data;
         }
+        /// <summary>
+        /// 获取编码后的数据buffer
+        /// </summary>
+        /// <returns>序列化后的buffer</returns>
         public byte[] GetBuffer()
         {
             return EncodeMessage();
@@ -325,6 +329,13 @@ namespace Cosmos
            {
                return EncodeMessage(conv);
            });
+        }
+        public static async Task<UdpNetMessage> EncodeMessageAsync(long conv, ushort opCode, byte[] message)
+        {
+            return await Task.Run<UdpNetMessage>(() =>
+            {
+                return EncodeMessage(conv,opCode,message);
+            });
         }
     }
 }

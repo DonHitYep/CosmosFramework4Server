@@ -28,7 +28,7 @@ namespace CosmosServer
             Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
-            GameManager.InitOuterModule(typeof(CosmosServer));
+            GameManager.InitOuterModule(typeof(CosmosServer).Assembly);
             Task.Run(GameManagerAgent.Instance.OnRefresh);
             while (true) { }
          //   Task.Run(AsyncCoroutine.Instance.Start);

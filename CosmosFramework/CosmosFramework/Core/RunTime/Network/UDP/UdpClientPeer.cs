@@ -109,13 +109,18 @@ namespace Cosmos.Network
                         UdpNetMessage tmpMsg;
                         if (sndMsgDict.TryRemove(netMsg.SN, out tmpMsg))
                         {
+#if DEBUG
                             Utility.Debug.LogInfo($" Conv :{Conv}，Receive KCP_ACK Message");
+#endif
                             GameManager.ReferencePoolManager.Despawn(tmpMsg);
                         }
                         else
                         {
+#if DEBUG
+
                             if (netMsg.Conv != 0)
                                 Utility.Debug.LogError($"Receive KCP_ACK Message Exception；SN : {netMsg.SN} ");
+#endif
                         }
                     }
                     break;
@@ -131,7 +136,9 @@ namespace Cosmos.Network
                         if (netMsg.OperationCode == InnerOpCode._Heartbeat)
                         {
                             Heartbeat.OnRenewal();
+#if DEBUG
                             Utility.Debug.LogInfo($" Send KCP_ACK Message，conv :{Conv} ;  {PeerEndPoint.Address} ;{PeerEndPoint.Port}");
+#endif
                         }
                         else
                         {
@@ -191,7 +198,7 @@ namespace Cosmos.Network
                     msg.RecurCount += 1;
                     //超时重发
                     sendMessageHandler?.Invoke(msg);
-                    Utility.Debug.LogInfo($"Peer Conv:{Conv }  ; {msg.ToString()}");
+                    //Utility.Debug.LogInfo($"Peer Conv:{Conv }  ; {msg.ToString()}");
                 }
             }
         }
