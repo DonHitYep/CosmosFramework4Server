@@ -8,14 +8,15 @@ using System.Text;
 
 namespace Cosmos
 {
-   public sealed partial class GameManager:ConcurrentSingleton<GameManager>, IControllable, IRefreshable
+    public sealed partial class GameManager : ConcurrentSingleton<GameManager>, IControllable, IRefreshable
     {
         #region Properties
         public bool IsPause { get; private set; }
         /// <summary>
         /// 轮询更新委托
         /// </summary>
-       internal Action refreshHandler;
+        internal Action refreshHandler;
+        internal Action terminationHandler;
         int moduleCount = 0;
         static Dictionary<ModuleEnum, IModule> moduleDict;
         internal static Dictionary<ModuleEnum, IModule> ModuleDict { get { return moduleDict; } }
@@ -45,7 +46,7 @@ namespace Cosmos
                 return networkManager;
             }
         }
-        static PollingManager  pollingManager;
+        static PollingManager pollingManager;
         public static PollingManager PollingManager
         {
             get
@@ -58,7 +59,6 @@ namespace Cosmos
                 return pollingManager;
             }
         }
-        static ConcurrentDictionary<Type, IModule> extensionsModuleDict = new ConcurrentDictionary<Type, IModule>();
         #endregion
         #region Methods
         /// <summary>
@@ -85,6 +85,16 @@ namespace Cosmos
                 return;
             refreshHandler?.Invoke();
         }
+        /// <summary>
+        /// 终结并释放GameManager
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            terminationHandler?.Invoke();
+            terminationHandler = null;
+            ModuleDict.Clear();
+        }
         internal void ModuleInitialization(IModule module)
         {
             module.OnInitialization();
@@ -100,11 +110,12 @@ namespace Cosmos
                 moduleDict.Add(moduleEnum, module);
                 moduleCount++;
                 refreshHandler += module.OnRefresh;
+                terminationHandler += module.OnTermination;
                 Utility.Debug.LogInfo("Module:\"" + moduleEnum.ToString() + "\" " + "  is OnInitialization" + " based on GameManager");
             }
             else
             {
-               Utility.Debug.LogError( new ArgumentException("Module:\"" + moduleEnum.ToString() + "\" " + " is already exist!")); 
+                Utility.Debug.LogError(new ArgumentException("Module:\"" + moduleEnum.ToString() + "\" " + " is already exist!"));
             }
         }
         internal void DeregisterModule(ModuleEnum module)
@@ -115,10 +126,12 @@ namespace Cosmos
                 refreshHandler -= m.OnRefresh;
                 moduleDict.Remove(module);
                 moduleCount--;
+                try { terminationHandler -= m.OnTermination; }
+                catch { }
                 Utility.Debug.LogInfo("Module:\"" + module.ToString() + "\" " + "  is OnTermination" + " based on GameManager", MessageColor.DARKBLUE);
             }
             else
-                Utility.Debug.LogError( new ArgumentNullException("Module:\"" + module.ToString() + "\" " + " is  not exist!"));
+                Utility.Debug.LogError(new ArgumentNullException("Module:\"" + module.ToString() + "\" " + " is  not exist!"));
         }
         internal bool HasModule(ModuleEnum module)
         {

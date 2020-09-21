@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Cosmos
 {
-    public class GameManagerAgent : ConcurrentSingleton<GameManagerAgent>, IRefreshable,IControllable
+    public class GameManagerAgent : ConcurrentSingleton<GameManagerAgent>, IRefreshable, IControllable
     {
         public bool IsPause { get; private set; }
         public bool Pause
@@ -24,11 +24,6 @@ namespace Cosmos
                     OnUnPause();
                 }
             }
-        }
-        Dictionary<ModuleEnum, IModule> moduleDict;
-        public GameManagerAgent()
-        {
-            moduleDict = GameManager.ModuleDict;
         }
         public void OnRefresh()
         {

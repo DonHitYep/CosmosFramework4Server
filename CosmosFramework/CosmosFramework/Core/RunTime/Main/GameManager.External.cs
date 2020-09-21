@@ -38,7 +38,7 @@ namespace Cosmos
         /// 初始化自定义模块
         /// </summary>
         /// <param name="assembly">模块所在程序集</param>
-        public static void InitCustomeModule(Assembly  assembly)
+        public static void InitCustomeModule(Assembly assembly)
         {
             Type[] types = assembly.GetTypes();
             for (int i = 0; i < types.Length; i++)
@@ -52,6 +52,7 @@ namespace Cosmos
                         module.OnInitialization();
                         Utility.Debug.LogInfo($"Instance Custome Module :{module.ToString()} ");
                         GameManager.Instance.refreshHandler += module.OnRefresh;
+                        GameManager.Instance.terminationHandler += module.OnTermination;
                     }
                 }
             }
