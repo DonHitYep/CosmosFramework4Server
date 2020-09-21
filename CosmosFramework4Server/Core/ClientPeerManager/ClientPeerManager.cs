@@ -7,7 +7,7 @@ using Cosmos.Network;
 
 namespace CosmosServer
 {
-    [OuterModule]
+    [CustomeModule]
     public class ClientPeerManager : Module<ClientPeerManager>
     {
         public override void OnInitialization()

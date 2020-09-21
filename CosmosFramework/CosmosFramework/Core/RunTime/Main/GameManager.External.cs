@@ -10,9 +10,9 @@ namespace Cosmos
     public sealed partial class GameManager
     {
         /// <summary>
-        /// 外源模块容器；
+        /// 自定义模块容器；
         /// </summary>
-        static Dictionary<Type, IModule> outerModuleDict = new Dictionary<Type, IModule>();
+        static Dictionary<Type, IModule> customeModuleDict = new Dictionary<Type, IModule>();
         /// <summary>
         /// 线程安全；
         /// 获取外源模块；
@@ -21,12 +21,12 @@ namespace Cosmos
         /// </summary>
         /// <typeparam name="TModule">实现模块功能的类对象</typeparam>
         /// <returns>获取的模块</returns>
-        public static TModule OuterModule<TModule>()
+        public static TModule CustomeModule<TModule>()
             where TModule : Module<TModule>, new()
         {
             Type type = typeof(TModule);
             IModule module = default;
-            var result = outerModuleDict.TryGetValue(type, out module);
+            var result = customeModuleDict.TryGetValue(type, out module);
             if (result)
             {
                 return module as TModule;
@@ -35,31 +35,31 @@ namespace Cosmos
                 return default(TModule);
         }
         /// <summary>
-        /// 初始化外源模块
+        /// 初始化自定义模块
         /// </summary>
         /// <param name="assembly">模块所在程序集</param>
-        public static void InitOuterModule(Assembly  assembly)
+        public static void InitCustomeModule(Assembly  assembly)
         {
             Type[] types = assembly.GetTypes();
             for (int i = 0; i < types.Length; i++)
             {
-                if (types[i].GetCustomAttribute<OuterModuleAttribute>() != null)
+                if (types[i].GetCustomAttribute<CustomeModuleAttribute>() != null)
                 {
                     var module = Utility.Assembly.GetTypeInstance(types[i]) as IModule;
-                    var result = outerModuleDict.TryAdd(types[i], module);
+                    var result = customeModuleDict.TryAdd(types[i], module);
                     if (result)
                     {
                         module.OnInitialization();
-                        Utility.Debug.LogInfo($"Instance Outer Module :{module.ToString()} ");
+                        Utility.Debug.LogInfo($"Instance Custome Module :{module.ToString()} ");
                         GameManager.Instance.refreshHandler += module.OnRefresh;
                     }
                 }
             }
-            PrepareOuterModule();
+            PrepareCustomeModule();
         }
-        static void PrepareOuterModule()
+        static void PrepareCustomeModule()
         {
-            foreach (var module in outerModuleDict.Values)
+            foreach (var module in customeModuleDict.Values)
             {
                 module.OnPreparatory();
             }

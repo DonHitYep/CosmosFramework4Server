@@ -9,7 +9,7 @@ namespace Cosmos
     /// 挂载此特性的模块必须继承自Module，实现之后模块将享有与内嵌模块同生命周期等级；
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class OuterModuleAttribute:Attribute
+    public class CustomeModuleAttribute:Attribute
     {
     }
 }
