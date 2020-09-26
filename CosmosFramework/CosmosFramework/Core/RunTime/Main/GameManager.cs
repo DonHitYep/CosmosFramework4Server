@@ -111,11 +111,11 @@ namespace Cosmos
                 moduleCount++;
                 refreshHandler += module.OnRefresh;
                 terminationHandler += module.OnTermination;
-                Utility.Debug.LogInfo("Module:\"" + moduleEnum.ToString() + "\" " + "  is OnInitialization" + " based on GameManager");
+                Utility.Debug.LogInfo($"Module :{module} is OnInitialization");
             }
             else
             {
-                Utility.Debug.LogError(new ArgumentException("Module:\"" + moduleEnum.ToString() + "\" " + " is already exist!"));
+                Utility.Debug.LogError(new ArgumentException($"Module : {module} is already exist!"));
             }
         }
         internal void DeregisterModule(ModuleEnum module)
@@ -128,10 +128,10 @@ namespace Cosmos
                 moduleCount--;
                 try { terminationHandler -= m.OnTermination; }
                 catch { }
-                Utility.Debug.LogInfo("Module:\"" + module.ToString() + "\" " + "  is OnTermination" + " based on GameManager", MessageColor.DARKBLUE);
+                Utility.Debug.LogInfo($"Module :{module} is OnTermination", MessageColor.DARKBLUE);
             }
             else
-                Utility.Debug.LogError(new ArgumentNullException("Module:\"" + module.ToString() + "\" " + " is  not exist!"));
+                Utility.Debug.LogError(new ArgumentException($"Module : {module} is not exist!"));
         }
         internal bool HasModule(ModuleEnum module)
         {
