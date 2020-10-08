@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MessagePack" Version="2.2.60" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CosmosFramework\CosmosFramework.csproj" />
   </ItemGroup>
 
