@@ -5,7 +5,7 @@ using System.Text;
 namespace Cosmos
 {
     [AttributeUsage(AttributeTargets.Class,AllowMultiple =false,Inherited =false)]
-    public class TargetHelperAttribute:Attribute
+    public class ImplementProviderAttribute : Attribute
     {
     }
 }
