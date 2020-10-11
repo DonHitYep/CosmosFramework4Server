@@ -12,10 +12,10 @@ namespace Cosmos.Network
         Action<IRemotePeer> peerConnectHandler;
         public event Action<IRemotePeer> PeerConnectEvent
         {
-            add{peerConnectHandler += value;}
+            add { peerConnectHandler += value; }
             remove
             {
-                try{peerConnectHandler -= value;}
+                try { peerConnectHandler -= value; }
                 catch (Exception e)
                 {
                     Utility.Debug.LogError(e);
@@ -25,10 +25,10 @@ namespace Cosmos.Network
         Action<IRemotePeer> peerDisconnectHandler;
         public event Action<IRemotePeer> PeerDisconnectEvent
         {
-            add{peerDisconnectHandler += value;}
+            add { peerDisconnectHandler += value; }
             remove
             {
-                try{peerDisconnectHandler -= value;}
+                try { peerDisconnectHandler -= value; }
                 catch (Exception e)
                 {
                     Utility.Debug.LogError(e);
@@ -46,25 +46,28 @@ namespace Cosmos.Network
         public bool TryRemove(long key)
         {
             IRemotePeer peer;
-            var result= clientPeerDict.TryRemove(key, out peer);
+            var result = clientPeerDict.TryRemove(key, out peer);
             if (result)
                 peerDisconnectHandler?.Invoke(peer);
             return result;
         }
         public bool TryRemove(long key, out IRemotePeer peer)
         {
-            return clientPeerDict.TryRemove(key, out peer);
+            var result = clientPeerDict.TryRemove(key, out peer);
+            if (result)
+                peerDisconnectHandler?.Invoke(peer);
+            return result;
         }
         public bool TryAdd(long key, IRemotePeer value)
         {
-            var result =  clientPeerDict.TryAdd(key, value);
+            var result = clientPeerDict.TryAdd(key, value);
             if (result)
                 peerConnectHandler?.Invoke(value);
             return result;
         }
         public bool TryUpdate(long key, IRemotePeer newValue, IRemotePeer comparsionValue)
         {
-            var result= clientPeerDict.TryUpdate(key, newValue, comparsionValue);
+            var result = clientPeerDict.TryUpdate(key, newValue, comparsionValue);
             if (result)
             {
                 peerConnectHandler?.Invoke(newValue);
