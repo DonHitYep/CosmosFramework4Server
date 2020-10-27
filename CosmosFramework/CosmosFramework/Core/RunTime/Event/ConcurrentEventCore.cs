@@ -14,7 +14,7 @@ namespace Cosmos
     /// <typeparam name="TKey">key的类型</typeparam>
     /// <typeparam name="TValue">value的类型</typeparam>
     /// <typeparam name="TDerived">派生类的类型</typeparam>
-    public class ConcurrentEventCore<TKey, TValue, TDerived> : Singleton<TDerived>
+    public class ConcurrentEventCore<TKey, TValue, TDerived> : ConcurrentSingleton<TDerived>
         where TDerived : ConcurrentEventCore<TKey, TValue, TDerived>, new()
         where TValue : class
     {

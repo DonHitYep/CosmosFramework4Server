@@ -197,8 +197,10 @@ namespace Cosmos.Network
                     //重发次数+1
                     msg.RecurCount += 1;
                     //超时重发
-                    if (sndMsgDict.TryRemove(msg.SN, out var unaMsg))
-                        sendMessageHandler?.Invoke(msg);
+                    //绕过编码消息，直接发送；
+                    GameManager.NetworkManager.SendNetworkMessage(msg.GetBuffer(), PeerEndPoint);
+                    //if (sndMsgDict.TryRemove(msg.SN, out var unaMsg))
+                    // sendMessageHandler?.Invoke(msg);
                     //Utility.Debug.LogInfo($"Peer Conv:{Conv }  ; {msg.ToString()}");
                 }
             }

@@ -30,7 +30,6 @@ namespace Cosmos
             add { peerAbortHandler += value; }
             remove { peerAbortHandler -= value; }
         }
-        //ConcurrentDictionary<uint, UdpClientPeer> clientPeerDict = new ConcurrentDictionary<uint, UdpClientPeer>();
         public override void OnInitialization()
         {
             base.OnInitialization();
@@ -85,7 +84,6 @@ namespace Cosmos
                             {
                                 //消息未完全发送，则重新发送
                                 SendMessageAsync(udpNetMsg);
-                                Utility.Debug.LogInfo($"Send net KCP_ACK message");
                             }
                         }
                         catch (Exception e)
@@ -95,7 +93,27 @@ namespace Cosmos
                     }
                 }
             }
+        }
+        public async override void SendMessageAsync(byte[] buffer, IPEndPoint endPoint)
+        {
+            if (udpSocket != null)
+            {
+                try
+                {
+                    int length = await udpSocket.SendAsync(buffer, buffer.Length, endPoint);
+                    if (length != buffer.Length)
+                    {
+                        //消息未完全发送，则重新发送
+                        SendMessageAsync(buffer, endPoint);
+                        Utility.Debug.LogInfo($"Send net KCP_ACK message");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Utility.Debug.LogError($"Send net message exceotion : {e.Message}");
+                }
             }
+        }
         public override void OnRefresh()
         {
             refreshHandler?.Invoke();
@@ -120,7 +138,7 @@ namespace Cosmos
                             CreateClientPeer(netMsg, data.RemoteEndPoint, out peer);
                         }
                         IRemotePeer rPeer;
-                        if (GameManager.NetworkManager .TryGetValue(netMsg.Conv, out rPeer))
+                        if (GameManager.NetworkManager.TryGetValue(netMsg.Conv, out rPeer))
                         {
                             UdpClientPeer tmpPeer = rPeer as UdpClientPeer;
                             //如果peer失效，则移除
@@ -128,7 +146,7 @@ namespace Cosmos
                             {
                                 refreshHandler -= tmpPeer.OnRefresh;
                                 IRemotePeer abortedPeer;
-                                GameManager.NetworkManager.TryRemove(netMsg.Conv,out abortedPeer);
+                                GameManager.NetworkManager.TryRemove(netMsg.Conv, out abortedPeer);
                                 //UdpClientPeer abortedUdpPeer = abortedPeer as UdpClientPeer;
                                 peerAbortHandler?.Invoke(abortedPeer.Conv);
                                 NetworkPeerEventCore.Instance.Dispatch(InnerOpCode._Disconnect, tmpPeer);

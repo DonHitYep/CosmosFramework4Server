@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System;
 namespace Cosmos.Reference
 {
@@ -10,7 +11,7 @@ namespace Cosmos.Reference
         /// 单个引用池上线
         /// </summary>
         internal static readonly short _ReferencePoolCapcity= 5000;
-        Dictionary<Type, ReferenceSpawnPool> referenceDict = new Dictionary<Type, ReferenceSpawnPool>();
+        ConcurrentDictionary<Type, ReferenceSpawnPool> referenceDict = new ConcurrentDictionary<Type, ReferenceSpawnPool>();
         #endregion
 
         #region Methods
@@ -32,7 +33,7 @@ namespace Cosmos.Reference
             Type type = typeof(T);
             if (!referenceDict.ContainsKey(type))
             {
-                referenceDict.Add(type, new ReferenceSpawnPool());
+                referenceDict.TryAdd(type, new ReferenceSpawnPool());
             }
             return referenceDict[type].Spawn<T>() as T;
         }
@@ -42,7 +43,7 @@ namespace Cosmos.Reference
             Type type = typeof(T);
             if (!referenceDict.ContainsKey(type))
             {
-                referenceDict.Add(type, new ReferenceSpawnPool());
+                referenceDict.TryAdd(type, new ReferenceSpawnPool());
             }
             return referenceDict[type].Spawn<T>();
         }
@@ -50,7 +51,7 @@ namespace Cosmos.Reference
         {
             if (!referenceDict.ContainsKey(type))
             {
-                referenceDict.Add(type, new ReferenceSpawnPool());
+                referenceDict.TryAdd(type, new ReferenceSpawnPool());
             }
             return referenceDict[type].Spawn(type);
         }
@@ -58,7 +59,7 @@ namespace Cosmos.Reference
         {
             Type type = refer.GetType();
             if (!referenceDict.ContainsKey(type))
-                referenceDict.Add(type, new ReferenceSpawnPool());
+                referenceDict.TryAdd(type, new ReferenceSpawnPool());
             referenceDict[type].Despawn(refer);
         }
         public void Despawns(params IReference[] refers)
@@ -67,7 +68,7 @@ namespace Cosmos.Reference
             {
                 Type type = refers[i].GetType();
                 if (!referenceDict.ContainsKey(type))
-                    referenceDict.Add(type, new ReferenceSpawnPool());
+                    referenceDict.TryAdd(type, new ReferenceSpawnPool());
                 referenceDict[type].Despawn(refers[i]);
             }
         }
@@ -77,7 +78,7 @@ namespace Cosmos.Reference
             Type type = typeof(T);
             if (!referenceDict.ContainsKey(type))
             {
-                referenceDict.Add(type, new ReferenceSpawnPool());
+                referenceDict.TryAdd(type, new ReferenceSpawnPool());
             }
             if (refers.Count <= 0)
                 return;
@@ -93,7 +94,7 @@ namespace Cosmos.Reference
             Type type = typeof(T);
             if (!referenceDict.ContainsKey(type))
             {
-                referenceDict.Add(type, new ReferenceSpawnPool());
+                referenceDict.TryAdd(type, new ReferenceSpawnPool());
             }
             if (refers.Length <= 0)
                 return;

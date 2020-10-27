@@ -239,7 +239,7 @@ namespace Cosmos
         /// <returns>序列化后的buffer</returns>
         public byte[] GetBuffer()
         {
-            return EncodeMessage();
+            return IsFull == true ? Buffer : EncodeMessage();
         }
         public void Clear()
         {

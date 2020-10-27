@@ -75,6 +75,7 @@ namespace Cosmos.Network
         /// </summary>
         /// <param name="netMsg">消息体</param>
         public virtual void SendMessageAsync(INetworkMessage netMsg) { }
+        public virtual void SendMessageAsync(byte[] buffer, IPEndPoint endPoint) { }
         /// <summary>
         /// 空虚函数;
         /// 发送报文信息

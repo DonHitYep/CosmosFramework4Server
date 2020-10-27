@@ -16,6 +16,7 @@ namespace Cosmos
         /// <param name="netMsg">网络消息数据对象</param>
         /// <param name="endPoint">远程对象</param>
         void SendMessageAsync(INetworkMessage netMsg, IPEndPoint endPoint);
+        void SendMessageAsync(byte[] buffer, IPEndPoint endPoint);
         /// <summary>
         /// 发送网络消息;
         /// </summary>

@@ -7,9 +7,9 @@ namespace CosmosServer
 {
     public class ImplMessagePackHelper : IMessagePackHelper
     {
-        public byte[] ToByteArray(object obj)
+        public byte[] ToByteArray<T>(T obj)
         {
-           return MessagePackSerializer.Serialize(obj);
+            return MessagePackSerializer.Serialize(obj);
         }
         public string ToJson<T>(T obj)
         {
@@ -21,7 +21,17 @@ namespace CosmosServer
         }
         public object ToObject(byte[] buffer, Type objectType)
         {
-            return MessagePackSerializer.Deserialize(objectType,buffer);
+            return MessagePackSerializer.Deserialize(objectType, buffer);
+        }
+        public object ToObject(string json, Type objectType)
+        {
+            var bytes = MessagePackSerializer.ConvertFromJson(json);
+            return MessagePackSerializer.Deserialize(objectType, bytes);
+        }
+        public T ToObject<T>(string json)
+        {
+            var bytes = MessagePackSerializer.ConvertFromJson(json);
+            return MessagePackSerializer.Deserialize<T>(bytes);
         }
     }
 }

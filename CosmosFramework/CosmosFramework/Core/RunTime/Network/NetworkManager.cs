@@ -55,6 +55,10 @@ namespace Cosmos.Network
         {
             service.SendMessageAsync(netMsg);
         }
+        public void SendNetworkMessage(byte[] buffer, IPEndPoint endPoint)
+        {
+            service.SendMessageAsync(buffer, endPoint);
+        }
         public void SendNetworkMessage(INetworkMessage netMsg, IPEndPoint endPoint)
         {
             service.SendMessageAsync(netMsg, endPoint);
