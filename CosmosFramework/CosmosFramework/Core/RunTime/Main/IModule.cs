@@ -4,6 +4,6 @@ namespace Cosmos
 {
     public interface IModule: IControllableBehaviour
     {
-        ModuleEnum ModuleEnum { get; }
+        Type ModuleType { get; }
     }
 }

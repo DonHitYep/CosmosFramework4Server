@@ -13,7 +13,7 @@ namespace Cosmos
         /// 秒级别；
         /// 1代表1秒；
         /// </summary>
-        public uint HeartbeatInterval { get; set; } = 45;
+        public uint HeartbeatInterval { get; set; } = 8;
         /// <summary>
         /// 秒级别；
         /// 上一次心跳时间；
@@ -26,7 +26,7 @@ namespace Cosmos
         /// <summary>
         /// 最大失效次数
         /// </summary>
-        public byte MaxRecurCount { get; set; } = 5;
+        public byte MaxRecurCount { get; set; } = 4;
         /// <summary>
         /// 失活时触发的委托；
         /// </summary>

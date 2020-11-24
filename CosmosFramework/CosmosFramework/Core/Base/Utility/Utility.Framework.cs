@@ -17,12 +17,6 @@ namespace Cosmos
             {
                return Utility.Text.Format("Cosmos." + moduleName + "." + moduleName + "Manager");
             }
-            public static ModuleEnum GetModuleEnum(string moduleName)
-            {
-                //var fullName = Utility.Text.Format("Cosmos." + moduleName);
-                var result = (ModuleEnum)Enum.Parse(typeof(ModuleEnum), moduleName);
-                return result;
-            }
         }
     }
 }

@@ -25,28 +25,8 @@ namespace Cosmos
                 return moduleName;
             }
         }
-        /// <summary>
-        /// 模块的完全限定名
-        /// </summary>
-        string moduleFullyQualifiedName = null;
-        public string ModuleFullyQualifiedName
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(moduleFullyQualifiedName))
-                    moduleFullyQualifiedName = Utility.Assembly.GetTypeFullName<TDerived>();
-                return moduleFullyQualifiedName;
-            }
-        }
-        public ModuleEnum ModuleEnum
-        {
-            get
-            {
-                var module = ModuleName.Replace("Manager", "");
-                return Utility.Framework.GetModuleEnum(module);
-            }
-        }
         public bool IsPause { get; protected set; }
+        public Type ModuleType { get { return typeof(TDerived); } }
         #endregion
 
         #region Methods

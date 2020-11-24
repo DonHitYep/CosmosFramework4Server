@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Xml;
 using System.IO;
 using Cosmos;
@@ -12,19 +13,19 @@ namespace Cosmos.Config
     /// </summary>
     internal sealed class ConfigManager : Module<ConfigManager>
     {
-        Dictionary<ushort, ConfigData> configDataDict = new Dictionary<ushort, ConfigData>();
+        ConcurrentDictionary<ushort, ConfigData> configDataDict = new ConcurrentDictionary<ushort, ConfigData>();
         internal bool AddConfigData(ushort cfgKey, bool boolValue, int intValue, float floatValue, string stringValue)
         {
             if (HasConfig(cfgKey))
                 return false;
-            configDataDict.Add(cfgKey, new ConfigData(boolValue, intValue, floatValue, stringValue));
+            configDataDict.TryAdd(cfgKey, new ConfigData(boolValue, intValue, floatValue, stringValue));
             return true;
         }
         internal bool RemoveConfig(ushort cfgKey)
         {
             if (HasConfig(cfgKey))
             {
-                configDataDict.Remove(cfgKey);
+                configDataDict.TryRemove(cfgKey,out _ );
                 return true;
             }
             else
