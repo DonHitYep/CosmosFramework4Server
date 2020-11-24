@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 namespace Cosmos.Mvvm
 {
-    public abstract class View : MonoBehaviour
+    public abstract class View 
     {
         public abstract string Name { get; }
         protected List<string> eventNameList = new List<string>();
@@ -22,7 +21,7 @@ namespace Cosmos.Mvvm
         protected T GetViewModel<T>(string viewModelName)
             where T : ViewModel
         {
-            return MVVM.GetViewModel<T>(name);
+            return MVVM.GetViewModel<T>(viewModelName);
         }
         protected void SendEvent(string eventName, object data = null)
         {
