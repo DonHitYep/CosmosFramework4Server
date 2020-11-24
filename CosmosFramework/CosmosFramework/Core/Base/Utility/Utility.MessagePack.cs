@@ -31,7 +31,7 @@ namespace Cosmos
                     throw new ArgumentNullException(Utility.Text.Format("Can not convert to JSON with exception '{0}", exception.ToString()), exception);
                 }
             }
-            public static byte[] ToByteArray(object obj)
+            public static byte[] ToByteArray<T>(T obj)
             {
                 if (messagePackHelper == null)
                 {
