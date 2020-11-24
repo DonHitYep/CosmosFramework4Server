@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -12,7 +13,7 @@ namespace Cosmos
         /// <summary>
         /// 自定义模块容器；
         /// </summary>
-        static Dictionary<Type, IModule> customeModuleDict = new Dictionary<Type, IModule>();
+        static ConcurrentDictionary<Type, IModule> customeModuleDict = new ConcurrentDictionary<Type, IModule>();
         /// <summary>
         /// 线程安全；
         /// 获取外源模块；

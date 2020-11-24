@@ -11,11 +11,7 @@ namespace Cosmos.Polling
         public event Action PollingHandler
         {
             add { pollingHandler +=value; }
-            remove
-            {
-                try{pollingHandler -= value;}
-                catch (Exception e){Utility.Debug.LogError(e);}
-            }
+            remove{pollingHandler -= value;}
         }
         public override void OnInitialization()
         {
