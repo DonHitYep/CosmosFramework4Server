@@ -8,7 +8,7 @@ namespace Cosmos.Mvvm
         public abstract string Name { get; }
         protected void SendEvent(string eventName, object data = null)
         {
-            MVVM.SendEvent(eventName, data);
+            MVC.SendEvent(eventName, data);
         }
     }
 }

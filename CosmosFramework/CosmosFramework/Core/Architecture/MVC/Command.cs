@@ -2,37 +2,37 @@
 using System.Collections.Generic;
 namespace Cosmos.Mvvm
 {
-    public abstract class ViewModel
+    public abstract class Command
     {
         public abstract void Execute( object data);
         protected T GetModel<T>() where T : Model
         {
-            return MVVM.GetModel<T>();
+            return MVC.GetModel<T>();
         }
         protected T GetModel<T>(string modelName) where T : Model
         {
-            return MVVM.GetModel<T>(modelName);
+            return MVC.GetModel<T>(modelName);
         }
         protected T GetView<T>()where T :View
         {
-            return MVVM.GetView<T>();
+            return MVC.GetView<T>();
         }
         protected T GetView<T>(string viewName) where T : View
         {
-            return MVVM.GetView<T>(viewName);
+            return MVC.GetView<T>(viewName);
         }
         protected void RegisterView(View view)
         {
-            MVVM.RegisterView(view);
+            MVC.RegisterView(view);
         }
         protected void RegisterModel(Model model)
         {
-            MVVM.RegisterModel(model);
+            MVC.RegisterModel(model);
         }
-        protected void RegisterViewModel<T>(string viewModelName)
-            where T :ViewModel
+        protected void RegisterCommand<T>(string cmdName)
+            where T :Command
         {
-            MVVM.RegisterViewModel<T>(viewModelName);
+            MVC.RegisterCommand<T>(cmdName);
         }
     }
 }

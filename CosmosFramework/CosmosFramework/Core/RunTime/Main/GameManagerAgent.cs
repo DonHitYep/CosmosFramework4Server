@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Cosmos
 {
@@ -25,13 +26,26 @@ namespace Cosmos
                 }
             }
         }
-        public void OnRefresh()
+        public void Start()
         {
             while (true)
             {
-                if (!IsPause)
-                    GameManager.Instance.OnRefresh();
+                try
+                {
+                    Thread.Sleep(1);
+                    OnRefresh();
+                }
+                catch (System.Exception e)
+                {
+                    Utility.Debug.LogError(e);
+                }
             }
+        }
+
+        public void OnRefresh()
+        {
+            if (!IsPause)
+                GameManager.Instance.OnRefresh();
         }
         public void OnPause()
         {

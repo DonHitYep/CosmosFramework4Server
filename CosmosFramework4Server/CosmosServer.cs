@@ -28,9 +28,7 @@ namespace CosmosServer
             Utility.Debug.LogInfo("Server Start Running !");
             GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
             GameManager.InitCustomeModule(typeof(CosmosServer).Assembly);
-            Task.Run(GameManagerAgent.Instance.OnRefresh);
-            while (true) { }
-         //   Task.Run(AsyncCoroutine.Instance.Start);
+            GameManagerAgent.Instance.Start();
         }
         /// <summary>
         /// 异步单线程协程测试函数

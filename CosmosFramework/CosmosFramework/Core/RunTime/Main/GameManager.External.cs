@@ -64,13 +64,35 @@ namespace Cosmos
                     }
                 }
             }
+            ActiveCustomeModule();
+        }
+        static void ActiveCustomeModule()
+        {
+            foreach (var module in customeModuleDict.Values)
+            {
+                try
+                {
+                    module.OnActive();
+                }
+                catch (Exception e)
+                {
+                    Utility.Debug.LogError(e);
+                }
+            }
             PrepareCustomeModule();
         }
         static void PrepareCustomeModule()
         {
             foreach (var module in customeModuleDict.Values)
             {
-                module.OnPreparatory();
+                try
+                {
+                    module.OnPreparatory();
+                }
+                catch (Exception e)
+                {
+                    Utility.Debug.LogError(e);
+                }
             }
         }
     }

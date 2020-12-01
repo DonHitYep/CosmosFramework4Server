@@ -3,11 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 namespace Cosmos.Mvvm
 {
-    public static class MVVM
+    /// <summary>
+    /// MVC调度类；
+    /// 此结构为：M<->C<->V
+    /// <->表示双向可操控；M与V解耦；
+    /// </summary>
+    public static class MVC
     {
         static Dictionary<TypeStringPair, View> viewDict = new Dictionary<TypeStringPair, View>();
         static Dictionary<TypeStringPair, Model> modelDict = new Dictionary<TypeStringPair, Model>();
-        static Dictionary<string, ViewModel> viewModelDict = new Dictionary<string, ViewModel>();
+        static Dictionary<string, Command> cmdDict = new Dictionary<string, Command>();
         public static void RegisterView<T>(T view)
             where T : View
         {
@@ -21,22 +26,22 @@ namespace Cosmos.Mvvm
             var typeString = new TypeStringPair(typeof(T), model.Name);
             modelDict.AddOrUpdate(typeString, model);
         }
-        public static void RegisterViewModel<T>( string viewModelName)
-where T : ViewModel
+        public static void RegisterCommand<T>( string cmdName)
+where T : Command
         {
-            var viewModel= Utility.Assembly.GetTypeInstance(typeof(T)) as ViewModel;
-            viewModelDict.AddOrUpdate(viewModelName, viewModel);
+            var cmd= Utility.Assembly.GetTypeInstance(typeof(T)) as Command;
+            cmdDict.AddOrUpdate(cmdName, cmd);
         }
-        public static void RegisterViewModel(Type viewModelType, string viewModelName)
+        public static void RegisterCommand(Type cmdType, string cmdName)
         {
-            if (typeof(ViewModel).IsAssignableFrom(viewModelType))
+            if (typeof(Command).IsAssignableFrom(cmdType))
             {
-                var viewModel = Utility.Assembly.GetTypeInstance(viewModelType) as ViewModel;
-                viewModelDict.AddOrUpdate(viewModelName, viewModel);
+                var cmd= Utility.Assembly.GetTypeInstance(cmdType) as Command;
+                cmdDict.AddOrUpdate(cmdName, cmd);
             }
             else
             {
-                throw new ArgumentException($"viewModel :{viewModelType} is not inherit form ViewModel !");
+                throw new ArgumentException($"Command :{cmdType} is not inherit form Command!");
             }
         }
         public static T GetView<T>() where T : View
@@ -75,23 +80,23 @@ where T : ViewModel
             else
                 return null;
         }
-        public static T GetViewModel<T>(string viewModelName) where T : ViewModel
+        public static T GetCommand<T>(string cmdName) where T : Command
         {
-            var result = viewModelDict.TryGetValue(viewModelName, out var vm);
+            var result = cmdDict.TryGetValue(cmdName, out var vm);
             if (result)
                 return vm as T;
             else
                 return null;
         }
-        public static void SendEvent(string eventName, object data = null)
+        public static void SendEvent(string cmdName, object data = null)
         {
-            if( viewModelDict.TryGetValue(eventName, out var viewModel))
+            if( cmdDict.TryGetValue(cmdName, out var cmd))
             {
-                viewModel.Execute(data);
+                cmd.Execute(data);
             }
             foreach (var view in viewDict.Values)
             {
-                view.ExecuteEvent(eventName, data);
+                view.ExecuteEvent(cmdName, data);
             }
         }
     }
