@@ -78,7 +78,7 @@ namespace Cosmos
             /// <param name="arg">目标类型的对象</param>
             /// <param name="typeFullName">完全限定名</param>
             /// <returns>返回T类型的目标类型对象</returns>
-            public static T GetTypeInstance<T>(T arg, string typeFullName)
+            public static T GetTypeInstance<T>(string typeFullName)
                 where T : class, new()
             {
                 return GetTypeInstance<T>(typeof(T).Assembly, typeFullName);
@@ -107,17 +107,36 @@ namespace Cosmos
                 return type.Assembly.CreateInstance(type.FullName) as T;
             }
             /// <summary>
-            /// 反射工具，得到反射类的对象；
-            /// T传入一个对象，获取这个对象的程序集，再由完全限定名获取具体对象
-            /// 不可反射Mono子类，被反射对象必须是具有无参公共构造
+            /// 获取所有派生类的实例对象
             /// </summary>
-            /// <typeparam name="T">泛型对象，需要此对象的程序集</typeparam>
-            /// <param name="fullName">完全限定名</param>
-            /// <returns>装箱后的对象</returns>
-            public static object GetTypeInstance<T>(string fullName)
-                where T : class, new()
+            /// <typeparam name="T">目标类型</typeparam>
+            /// <param name="type">类型</param>
+            /// <returns>反射生成后的对象数组</returns>
+            public static T[] GetDerivedTypeInstances<T>()
+                where T : class
             {
-                return typeof(T).Assembly.CreateInstance(fullName);
+                Type type = typeof(T);
+                List<T> list = new List<T>();
+                var types = GetDerivedTypes(type);
+                var length = types.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    var obj = GetTypeInstance(types[i]) as T;
+                    list.Add(obj);
+                }
+                return list.ToArray();
+            }
+            public static object[] GetDerivedTypeInstances(Type type)
+            {
+                List<object> list = new List<object>();
+                var types = GetDerivedTypes(type);
+                var length = types.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    var obj = GetTypeInstance(types[i]);
+                    list.Add(obj);
+                }
+                return list.ToArray();
             }
             /// <summary>
             /// 获取变量的名称；
