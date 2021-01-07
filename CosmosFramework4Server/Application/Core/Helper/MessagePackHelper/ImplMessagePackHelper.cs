@@ -5,6 +5,7 @@ using MessagePack;
 using Cosmos;
 namespace CosmosServer
 {
+    [ImplementProvider]
     public class ImplMessagePackHelper : IMessagePackHelper
     {
         public byte[] ToByteArray<T>(T obj)

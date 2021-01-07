@@ -4,14 +4,16 @@ using System.Net;
 using System.Net.Sockets;
 using System;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 namespace Cosmos.Network
 {
     //TODO NetworkManager
+    [Module]
     /// <summary>
     /// 此模块为客户端网络管理类
     /// </summary>
-    public sealed partial class NetworkManager : Module<NetworkManager>
+    internal sealed partial class NetworkManager : Module, INetworkManager
     {
         string serverIP;
         int serverPort;
@@ -39,6 +41,23 @@ namespace Cosmos.Network
                 return clientEndPoint;
             }
         }
+
+
+        public int PeerCount { get { return clientPeerDict.Count; } }
+        ConcurrentDictionary<long, IRemotePeer> clientPeerDict = new ConcurrentDictionary<long, IRemotePeer>();
+        Action<IRemotePeer> peerConnectHandler;
+        public event Action<IRemotePeer> PeerConnectEvent
+        {
+            add { peerConnectHandler += value; }
+            remove { peerConnectHandler -= value; }
+        }
+        Action<IRemotePeer> peerDisconnectHandler;
+        public event Action<IRemotePeer> PeerDisconnectEvent
+        {
+            add { peerDisconnectHandler += value; }
+            remove { peerDisconnectHandler -= value; }
+        }
+
         public override void OnInitialization()
         {
             IsPause = false;
@@ -125,6 +144,47 @@ namespace Cosmos.Network
             this.service = service;
             service.OnInitialization();
             Utility.Debug.LogInfo("建立UDP远程连接");
+        }
+
+        public bool TryGetPeer(long key, out IRemotePeer value)
+        {
+            return clientPeerDict.TryGetValue(key, out value);
+        }
+        public bool ContainsPeer(long key)
+        {
+            return clientPeerDict.ContainsKey(key);
+        }
+        public bool TryRemovePeer(long key)
+        {
+            IRemotePeer peer;
+            var result = clientPeerDict.TryRemove(key, out peer);
+            if (result)
+                peerDisconnectHandler?.Invoke(peer);
+            return result;
+        }
+        public bool TryRemovePeer(long key, out IRemotePeer peer)
+        {
+            var result = clientPeerDict.TryRemove(key, out peer);
+            if (result)
+                peerDisconnectHandler?.Invoke(peer);
+            return result;
+        }
+        public bool TryAddPeer(long key, IRemotePeer value)
+        {
+            var result = clientPeerDict.TryAdd(key, value);
+            if (result)
+                peerConnectHandler?.Invoke(value);
+            return result;
+        }
+        public bool TryUpdatePeer(long key, IRemotePeer newValue, IRemotePeer comparsionValue)
+        {
+            var result = clientPeerDict.TryUpdate(key, newValue, comparsionValue);
+            if (result)
+            {
+                peerConnectHandler?.Invoke(newValue);
+                peerDisconnectHandler?.Invoke(comparsionValue);
+            }
+            return result;
         }
     }
 }

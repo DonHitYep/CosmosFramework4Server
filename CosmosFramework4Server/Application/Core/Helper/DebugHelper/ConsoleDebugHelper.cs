@@ -6,6 +6,7 @@ using System.Text;
 using Cosmos;
 namespace ProtocolCore
 {
+    [ImplementProvider]
     public class ConsoleDebugHelper : IDebugHelper
     {
         readonly string logFullPath;

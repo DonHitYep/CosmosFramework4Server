@@ -35,7 +35,7 @@ namespace Cosmos.FSM
             if (states == null || states.Length < 1)
                 throw new ArgumentNullException("FSM owner is invalid");
             //从引用池获得同类
-            FSM<T> fsm = GameManager.ReferencePoolManager.Spawn<FSM<T>>();
+            FSM<T> fsm = CosmosEntry.ReferencePoolManager.Spawn<FSM<T>>();
             fsm.Name = name;
             fsm.Owner = owner;
             fsm.IsDestoryed = false;
@@ -59,7 +59,7 @@ namespace Cosmos.FSM
             if (states == null || states.Count < 1)
                 throw new ArgumentNullException("FSM owner is invalid");
             //从引用池获得同类
-            FSM<T> fsm = GameManager.ReferencePoolManager.Spawn<FSM<T>>();
+            FSM<T> fsm = CosmosEntry.ReferencePoolManager.Spawn<FSM<T>>();
             fsm.Name = name;
             fsm.Owner = owner;
             fsm.IsDestoryed = false;
@@ -149,7 +149,7 @@ namespace Cosmos.FSM
         }
         public override void Shutdown()
         {
-            GameManager.ReferencePoolManager.Despawn(this);
+            CosmosEntry.ReferencePoolManager.Despawn(this);
         }
         #endregion
         #region State

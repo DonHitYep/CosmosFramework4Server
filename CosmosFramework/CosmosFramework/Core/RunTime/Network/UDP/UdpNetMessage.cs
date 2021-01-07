@@ -263,7 +263,7 @@ namespace Cosmos
         }
         public static UdpNetMessage ConvertToACK(UdpNetMessage srcMsg)
         {
-            UdpNetMessage ack = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            UdpNetMessage ack = CosmosEntry.ReferencePoolManager.Spawn<UdpNetMessage>();
             ack.Conv = srcMsg.Conv;
             ack.Snd_una = srcMsg.Snd_una;
             ack.SN = srcMsg.SN;
@@ -280,7 +280,7 @@ namespace Cosmos
         /// <returns></returns>
         public static UdpNetMessage HeartbeatMessage(long conv)
         {
-            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            var udpNetMsg = CosmosEntry.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.ACK;
             udpNetMsg.ServiceMsgLength = 0;
@@ -289,7 +289,7 @@ namespace Cosmos
         }
         public static UdpNetMessage EncodeMessage(long conv)
         {
-            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            var udpNetMsg = CosmosEntry.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.MSG;
             udpNetMsg.ServiceMsgLength = 0;
@@ -304,7 +304,7 @@ namespace Cosmos
         /// <returns>编码成功后的数据</returns>
         public static UdpNetMessage EncodeMessage(ushort opCode, byte[] message)
         {
-            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            var udpNetMsg = CosmosEntry.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Cmd = KcpProtocol.MSG;
             udpNetMsg.ServiceMsgLength = 0;
             udpNetMsg.OperationCode = opCode;
@@ -314,7 +314,7 @@ namespace Cosmos
         }
         public static UdpNetMessage EncodeMessage(long conv,ushort opCode, byte[] message)
         {
-            var udpNetMsg = GameManager.ReferencePoolManager.Spawn<UdpNetMessage>();
+            var udpNetMsg = CosmosEntry.ReferencePoolManager.Spawn<UdpNetMessage>();
             udpNetMsg.Conv = conv;
             udpNetMsg.Cmd = KcpProtocol.MSG;
             udpNetMsg.ServiceMsgLength = 0;

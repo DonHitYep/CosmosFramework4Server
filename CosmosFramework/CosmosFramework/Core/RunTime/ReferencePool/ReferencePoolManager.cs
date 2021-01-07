@@ -4,17 +4,22 @@ using System.Collections.Concurrent;
 using System;
 namespace Cosmos.Reference
 {
-    public sealed class ReferencePoolManager :Module<ReferencePoolManager>
+    [Module]
+    public sealed class ReferencePoolManager :Module,IReferencePoolManager
     {
         #region Properties
         /// <summary>
         /// 单个引用池上线
         /// </summary>
         internal static readonly short _ReferencePoolCapcity= 5000;
-        ConcurrentDictionary<Type, ReferenceSpawnPool> referenceDict = new ConcurrentDictionary<Type, ReferenceSpawnPool>();
+        ConcurrentDictionary<Type, ReferenceSpawnPool> referenceDict ;
         #endregion
 
         #region Methods
+        public override void OnInitialization()
+        {
+            referenceDict = new ConcurrentDictionary<Type, ReferenceSpawnPool>();
+        }
         public int GetPoolCount<T>() 
             where T : class, IReference, new()
         {

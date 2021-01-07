@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace CosmosServer
 {
-    class CosmosServer
+    class CosmosServerLauncher
     {
         public delegate bool ControlCtrlDelegate(int CtrlType);
         [DllImport("kernel32.dll")]
@@ -24,11 +24,10 @@ namespace CosmosServer
         static void Main(string[] args)
         {
             SetConsoleCtrlHandler(newDelegate, true);
-            Utility.Debug.SetHelper(new ConsoleDebugHelper());
             Utility.Debug.LogInfo("Server Start Running !");
-            GameManager.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
-            GameManager.InitCustomeModule(typeof(CosmosServer).Assembly);
-            GameManagerAgent.Instance.Start();
+            CosmosEntry.Instance.Start();
+            CosmosEntry.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
+            CosmosEntry.Instance.Run();
         }
         /// <summary>
         /// 异步单线程协程测试函数

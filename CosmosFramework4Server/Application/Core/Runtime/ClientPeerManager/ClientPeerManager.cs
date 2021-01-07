@@ -7,24 +7,28 @@ using Cosmos.Network;
 
 namespace CosmosServer
 {
-    [CustomeModule]
-    public class ClientPeerManager : Module<ClientPeerManager>
+    [Module]
+    public class ClientPeerManager : Module,IClientPeerManager
     {
+        INetworkManager networkManager;
         public override void OnInitialization()
         {
-            Utility.Debug.LogInfo("PeerManager OnInitialization");
             NetworkMsgEventCore.Instance.AddEventListener(10, PeerHandler);
-            GameManager.NetworkManager.PeerConnectEvent += OnPeerConnectHandler;
-            GameManager.NetworkManager.PeerDisconnectEvent+=OnPeerDisConnectHandler;
+        }
+        public override void OnPreparatory()
+        {
+            networkManager = GameManager.GetModule<INetworkManager>();
+            networkManager.PeerConnectEvent += OnPeerConnectHandler;
+            networkManager.PeerDisconnectEvent += OnPeerDisConnectHandler;
         }
         void PeerHandler(INetworkMessage netMsg)
         {
             UdpNetMessage udpNetMsg = netMsg as UdpNetMessage;
-            Utility.Debug.LogWarning($"PeerManager接收到网络广播事件:{netMsg.ToString()}；消息体：{Utility.Converter.GetString(udpNetMsg.ServiceMsg)}");
+            Utility.Debug.LogWarning($"ClientPeerManager接收到网络广播事件:{netMsg}；消息体：{Utility.Converter.GetString(udpNetMsg.ServiceMsg)}");
             string str = "锟斤拷666";
             var data = Utility.Encode.ConvertToByte(str);
             UdpNetMessage msg = UdpNetMessage.EncodeMessage(udpNetMsg.Conv,10, data);
-            GameManager.NetworkManager.SendNetworkMessage(msg);
+            networkManager.SendNetworkMessage(msg);
         }
         void OnPeerConnectHandler(IRemotePeer peer)
         {

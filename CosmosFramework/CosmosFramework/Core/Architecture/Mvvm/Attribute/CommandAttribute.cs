@@ -12,7 +12,7 @@ namespace Cosmos.Mvvm
     [AttributeUsage( AttributeTargets.Class, AllowMultiple =false, Inherited =false)]
     public class CommandAttribute:Attribute
     {
-        public CommandAttribute(string cmdName)
+        public CommandAttribute(string cmdName )
         {
             CommandName = cmdName;
         }

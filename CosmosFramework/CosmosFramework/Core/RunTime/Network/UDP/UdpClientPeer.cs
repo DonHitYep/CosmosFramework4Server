@@ -112,7 +112,7 @@ namespace Cosmos.Network
 #if DEBUG
                             Utility.Debug.LogInfo($" Conv :{Conv}，Receive KCP_ACK Message");
 #endif
-                            GameManager.ReferencePoolManager.Despawn(tmpMsg);
+                            CosmosEntry.ReferencePoolManager.Despawn(tmpMsg);
                         }
                         else
                         {
@@ -198,7 +198,7 @@ namespace Cosmos.Network
                     msg.RecurCount += 1;
                     //超时重发
                     //绕过编码消息，直接发送；
-                    GameManager.NetworkManager.SendNetworkMessage(msg.GetBuffer(), PeerEndPoint);
+                    CosmosEntry.NetworkManager.SendNetworkMessage(msg.GetBuffer(), PeerEndPoint);
                     //if (sndMsgDict.TryRemove(msg.SN, out var unaMsg))
                     // sendMessageHandler?.Invoke(msg);
                     //Utility.Debug.LogInfo($"Peer Conv:{Conv }  ; {msg.ToString()}");
