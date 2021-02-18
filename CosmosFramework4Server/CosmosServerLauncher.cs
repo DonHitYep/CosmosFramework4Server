@@ -24,10 +24,11 @@ namespace CosmosServer
         static void Main(string[] args)
         {
             SetConsoleCtrlHandler(newDelegate, true);
+            CosmosEntry.LaunchHelpers();
             Utility.Debug.LogInfo("Server Start Running !");
-            CosmosEntry.Instance.Start();
+            CosmosEntry.LaunchModules();
             CosmosEntry.NetworkManager.Connect(ip, port, System.Net.Sockets.ProtocolType.Udp);
-            CosmosEntry.Instance.Run();
+            CosmosEntry.Run();
         }
         /// <summary>
         /// 异步单线程协程测试函数

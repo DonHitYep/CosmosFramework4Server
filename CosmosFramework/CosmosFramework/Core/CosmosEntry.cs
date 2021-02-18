@@ -9,10 +9,10 @@ namespace Cosmos
     /// <summary>
     /// Cosmos服务端入口；
     /// </summary>
-    public class CosmosEntry : ConcurrentSingleton<CosmosEntry>
+    public class CosmosEntry 
     {
-        public bool IsPause { get; private set; }
-        public bool Pause
+        public static bool IsPause { get; private set; }
+        public static bool Pause
         {
             get { return IsPause; }
             set
@@ -30,12 +30,12 @@ namespace Cosmos
                 }
             }
         }
-        public static IFSMManager FSMManager { get; private set; }
-        public static IConfigManager ConfigManager { get; private set; }
-        public static INetworkManager NetworkManager { get; private set; }
-        public static IReferencePoolManager ReferencePoolManager { get; private set; }
-        public static IEventManager EventManager { get; private set; }
-        public void Start()
+        public static IFSMManager FSMManager { get { return GameManager.GetModule<IFSMManager>(); } }
+        public static IConfigManager ConfigManager { get { return GameManager.GetModule<IConfigManager>(); } }
+        public static INetworkManager NetworkManager { get { return GameManager.GetModule<INetworkManager>(); } }
+        public static IReferencePoolManager ReferencePoolManager { get { return GameManager.GetModule<IReferencePoolManager>(); } }
+        public static IEventManager EventManager { get { return GameManager.GetModule<IEventManager>(); } }
+        public static void LaunchHelpers()
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             var length = assemblies.Length;
@@ -66,10 +66,12 @@ namespace Cosmos
                     break;
                 }
             }
-            GameManager.PreparatoryModule();
-            AssignManager();
         }
-        public void Run()
+        public static void LaunchModules()
+        {
+            GameManager.PreparatoryModule();
+        }
+        public  static void Run()
         {
             while (true)
             {
@@ -85,26 +87,13 @@ namespace Cosmos
                 }
             }
         }
-        public void OnPause()
+        public static void OnPause()
         {
             GameManager.OnPause();
         }
-        public void OnUnPause()
+        public static void OnUnPause()
         {
             GameManager.OnUnPause();
-        }
-        void AssignManager()
-        {
-            try { FSMManager = GameManager.GetModule<IFSMManager>(); }
-            catch (Exception e) { Utility.Debug.LogError(e); }
-            try { ConfigManager = GameManager.GetModule<IConfigManager>(); }
-            catch (Exception e) { Utility.Debug.LogError(e); }
-            try { NetworkManager = GameManager.GetModule<INetworkManager>(); }
-            catch (Exception e) { Utility.Debug.LogError(e); }
-            try { ReferencePoolManager = GameManager.GetModule<IReferencePoolManager>(); }
-            catch (Exception e) { Utility.Debug.LogError(e); }
-            try { EventManager = GameManager.GetModule<IEventManager>(); }
-            catch (Exception e) { Utility.Debug.LogError(e); }
         }
     }
 }
